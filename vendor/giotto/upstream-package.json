@@ -1,0 +1,38 @@
+{
+  "name": "giotto",
+  "version": "0.1.0",
+  "description": "A live diagram canvas your coding agent edits through MCP",
+  "type": "module",
+  "bin": {
+    "giotto": "bin/giotto.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "scripts": {
+    "start": "node bin/giotto.js mcp --cloud",
+    "test": "node --test test/*.test.js"
+  },
+  "repository": "github:nicoloboschi/giotto",
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2"
+  },
+  "exports": {
+    "./player": "./lib/player.js",
+    "./render": "./lib/render.js",
+    "./scenes": "./lib/scenes.js",
+    "./styles": "./lib/styles.js",
+    "./edit": "./lib/edit.js",
+    "./animate": "./lib/animate.js",
+    "./figure": "./lib/figure.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "public",
+    "skills",
+    "README.md"
+  ]
+}

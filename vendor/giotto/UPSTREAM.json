@@ -1,0 +1,103 @@
+{
+  "repository": "https://github.com/nicoloboschi/giotto",
+  "commit": "4c06069944fd0f515e4e7bf89b9cca8398cd7936",
+  "blobs": [
+    {
+      "path": "lib/animate.js",
+      "sha": "d5f13217ed57630c783e6eef8ff773cc7c1886a0"
+    },
+    {
+      "path": "lib/blocks.js",
+      "sha": "7a2491f64ca29f69588271f18fcd1b7524958dbe"
+    },
+    {
+      "path": "lib/chart.js",
+      "sha": "7a23ddf28941a33211028355ed284d064435e5a2"
+    },
+    {
+      "path": "lib/edit.js",
+      "sha": "c75870ce771f619b03b170010e72c1d173d27038"
+    },
+    {
+      "path": "lib/emoji.js",
+      "sha": "05619bdc3eb9fe494d8a4f1a403cfa7d266ee84e"
+    },
+    {
+      "path": "lib/figure.js",
+      "sha": "7673f97dc3a14355d99470e6887adeeb4566370b"
+    },
+    {
+      "path": "lib/frame-worker.js",
+      "sha": "c44ecaef6ae576e9897c6c20c707b62146ad9161"
+    },
+    {
+      "path": "lib/history.js",
+      "sha": "9fbb829eedee50183a3058fdd7a4367b7ef2bb61"
+    },
+    {
+      "path": "lib/page.js",
+      "sha": "adbfab26c06aef87a73898738766c42cff51f355"
+    },
+    {
+      "path": "lib/player.js",
+      "sha": "af5f0c4e2d8dc630ae63ed6139f825ff5f623119"
+    },
+    {
+      "path": "lib/render-job.js",
+      "sha": "1c1930cc1c23736f62f7e52aa05705644afbe7be"
+    },
+    {
+      "path": "lib/render.js",
+      "sha": "a3c909ddcec5e5c2ae7d854d4d2d5304b9d7c198"
+    },
+    {
+      "path": "lib/scenes.js",
+      "sha": "79a671dfc06c6c3e7e6c5094ca85c9f8355b48bd"
+    },
+    {
+      "path": "lib/styles.js",
+      "sha": "6e3bdcd1a121ef3120d43b44e17e1ddc7c9edf43"
+    },
+    {
+      "path": "lib/video.js",
+      "sha": "00dc4025f95040af92f4200b43915bbed265eba9"
+    },
+    {
+      "path": "public/app.html",
+      "sha": "fc4cbfed240923c2bfe81e693587214ef5107455"
+    },
+    {
+      "path": "public/index.html",
+      "sha": "2d3b4c92b3e0ea221ae8bbe40edda52b9192886d"
+    },
+    {
+      "path": "examples/player.html",
+      "sha": "dd3d9f3a1130637b22c34576aad030406cc0df48"
+    },
+    {
+      "path": "examples/what-hindsight-does.json",
+      "sha": "8407f9ff9f28c9f4f9fd0fdeed5f0359d5678a61"
+    },
+    {
+      "path": "examples/what-hindsight-does.mjs",
+      "sha": "de6c63118c49e73a9b73baff85ca53708fe8eed8"
+    },
+    {
+      "path": "skills/giotto/SKILL.md",
+      "sha": "fa079ba70665b9b28243b23b6402e7fc50cb027f"
+    },
+    {
+      "path": "README.md",
+      "sha": "011109263db3faf203763a733b67777b67ef582c"
+    },
+    {
+      "path": "upstream-package.json",
+      "sha": "c169d3c1fabd8f35b1c884c52db59ef8bdcc3198"
+    },
+    {
+      "path": "bin/giotto.js",
+      "sha": "3982658d0efdef02c0fe2081b47e95368852574b"
+    }
+  ],
+  "note": "Upstream JS, HTML, examples, README and skill are unmodified. Packaging manifest excludes unused PNG native dependency; upstream-package.json preserves the original."
+}

@@ -1,0 +1,37 @@
+{
+  "name": "vigil-local",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "vigil": "dist/cli.js"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run typecheck && vite build && tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test test/**/*.test.ts",
+    "fixture": "tsx src/fixture.ts",
+    "vigil": "tsx src/cli.ts",
+    "test:security-map:browser": "tsx scripts/security-map-smoke.ts"
+  },
+  "dependencies": {
+    "giotto": "file:vendor/giotto",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.14",
+    "@types/node": "^24.7.2",
+    "@types/react": "^19.1.16",
+    "@types/react-dom": "^19.1.9",
+    "@types/ws": "^8.18.1",
+    "@vitejs/plugin-react": "^5.0.4",
+    "tailwindcss": "^4.1.14",
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.9"
+  }
+}

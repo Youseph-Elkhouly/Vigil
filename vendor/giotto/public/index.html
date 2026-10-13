@@ -1,0 +1,1552 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Giotto</title>
+  <style>
+    :root { --bg: #ffffff; --panel: #fbfbfa; --fg: #1f2328; --muted: #6e7681; --line: #e6e6e3; --hover: #f1f1ef; --active: #ececea; --accent: #2563eb; }
+    body.dark { --bg: #16171b; --panel: #1b1c21; --fg: #e6e6e6; --muted: #8b8f98; --line: #2a2c33; --hover: #24262c; --active: #2b2d34; --accent: #6b9bff; }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--fg); background: var(--bg); }
+    button, input { font: inherit; color: inherit; }
+    #layout { display: flex; height: 100%; }
+
+    aside { width: 240px; flex: none; display: flex; flex-direction: column; background: var(--panel); border-right: 1px solid var(--line); }
+    .brand { display: flex; align-items: center; gap: 8px; height: 49px; padding: 0 14px; border-bottom: 1px solid var(--line); font-weight: 600; font-size: 14px; }
+    .brand svg { color: var(--fg); }
+    #theme-btn { margin-left: auto; width: 28px; height: 28px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; font-size: 14px; font-weight: 400; }
+    #theme-btn:hover { background: var(--hover); color: var(--fg); }
+    #kinds { display: flex; gap: 2px; margin: 8px 8px 2px; padding: 2px; border-radius: 8px; background: var(--hover); }
+    #kinds button { flex: 1; border: 0; border-radius: 6px; padding: 4px 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 12px; }
+    #kinds button:hover { color: var(--fg); }
+    #kinds button.on { background: var(--bg); color: var(--fg); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+    #list p { margin: 10px; color: var(--muted); font-size: 12px; }
+    #list { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 6px; }
+    #list button { position: relative; display: block; width: 100%; text-align: left; border: 0; border-radius: 6px; padding: 7px 10px; background: transparent; cursor: pointer; }
+    #list button:hover { background: var(--hover); }
+    #list button.on { background: var(--active); }
+    #list .del { position: absolute; top: 6px; right: 6px; padding: 0 6px; border-radius: 4px; color: var(--muted); visibility: hidden; }
+    #list button:hover .del, #list .del:focus { visibility: visible; }
+    #list .del:hover { background: var(--hover); color: inherit; }
+    #list button { display: grid; grid-template-columns: 16px minmax(0, 1fr); column-gap: 9px; align-items: center; }
+    #list .ic { grid-row: span 2; color: var(--muted); }
+    #list button.on .ic { color: var(--fg); }
+    #list .t { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #list small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 11.5px; }
+
+    main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
+    header { display: flex; align-items: center; gap: 6px; height: 49px; padding: 0 10px; background: var(--panel); border-bottom: 1px solid var(--line); }
+    #title { flex: 1; min-width: 0; border: 0; background: transparent; font-weight: 600; font-size: 14px; padding: 5px 6px; border-radius: 6px; }
+    #title:hover, #title:focus { background: var(--hover); outline: 0; }
+    #status { color: var(--muted); font-size: 12px; white-space: nowrap; }
+    #search { width: 170px; border: 1px solid var(--line); border-radius: 6px; padding: 5px 9px; background: var(--bg); outline: 0; }
+    #search:focus { border-color: var(--accent); }
+    .btn { display: inline-flex; align-items: center; gap: 6px; height: 29px; border: 1px solid var(--line); border-radius: 6px; padding: 0 10px; background: var(--bg); cursor: pointer; white-space: nowrap; }
+    .btn:hover { background: var(--hover); }
+    #export-dlg { width: min(1080px, calc(100vw - 40px)); height: min(760px, calc(100vh - 40px)); padding: 0; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--fg); }
+    #export-dlg::backdrop { background: rgba(0,0,0,.4); }
+    #export-dlg form { display: flex; flex-direction: column; height: 100%; }
+    #export-dlg [hidden] { display: none !important; }
+    .xhead { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+    .xhead strong { flex: 1; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .xhead button { width: 28px; height: 28px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; font-size: 14px; }
+    .xhead button:hover { background: var(--hover); color: var(--fg); }
+    .xbody { flex: 1; min-height: 0; display: flex; }
+    #x-formats { width: 190px; flex: none; padding: 8px; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
+    #x-formats button { border: 0; border-radius: 7px; padding: 8px 10px; background: transparent; color: var(--fg); cursor: pointer; text-align: left; display: grid; gap: 1px; }
+    #x-formats button small { color: var(--muted); font-size: 11.5px; }
+    #x-formats button:hover { background: var(--hover); }
+    #x-formats button.on { background: var(--active); font-weight: 600; }
+    #x-formats button.on small { font-weight: 400; }
+    .xmain { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; padding: 12px 14px; }
+    /* The checks show the image's real edges and any transparent corners. */
+    .xstage { flex: 1; min-height: 0; display: flex; position: relative; }
+    #x-preview { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; overflow: auto; border-radius: 8px; border: 1px solid var(--line);
+      background: conic-gradient(var(--hover) 25%, var(--bg) 0 50%, var(--hover) 0 75%, var(--bg) 0) 0 0 / 18px 18px; position: relative; }
+    #x-preview > img, #x-preview > video, #x-preview > .xvid > svg { max-width: calc(100% - 24px); max-height: calc(100% - 24px); box-shadow: 0 2px 14px rgba(0,0,0,.14); display: block; }
+    #x-preview > .xvid { display: contents; }
+    #x-preview > .xvid > svg { width: auto; height: auto; }
+    #x-preview > iframe { border: 0; background: #fff; box-shadow: 0 2px 14px rgba(0,0,0,.14); transform-origin: center; flex: none; }
+    #x-preview > textarea { align-self: stretch; flex: 1; margin: 0; border: 0; border-radius: 8px; padding: 10px; resize: none; background: var(--bg); color: var(--fg); font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre; }
+    #x-preview .xwait { color: var(--muted); font-size: 13px; background: var(--panel); padding: 6px 10px; border-radius: 6px; }
+    /* While a video renders: a pill with the progress over the preview, and a bar along its bottom edge. */
+    #x-render { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 6px 13px; border-radius: 999px;
+      background: var(--panel); border: 1px solid var(--line); box-shadow: 0 4px 16px rgba(0,0,0,.14); font-size: 12.5px; white-space: nowrap; }
+    .spin { width: 12px; height: 12px; flex: none; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: xspin .8s linear infinite; }
+    @keyframes xspin { to { transform: rotate(360deg); } }
+    #x-progress { position: absolute; left: 1px; right: 1px; bottom: 1px; height: 4px; overflow: hidden; border-radius: 0 0 7px 7px; background: color-mix(in srgb, var(--accent) 18%, transparent); }
+    #x-progress i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .6s ease; }
+    #x-progress.busy i { width: 30%; transition: none; animation: xslide 1.2s ease-in-out infinite; }
+    @keyframes xslide { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
+    #x-go .spin { border-color: rgba(255,255,255,.35); border-top-color: #fff; }
+    #x-formats hr { border: 0; border-top: 1px solid var(--line); margin: 6px 4px; }
+    #queue-btn .spin { width: 11px; height: 11px; }
+    .xqueue { align-self: stretch; flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; background: var(--panel); border-radius: 8px; }
+    .xqueue p { color: var(--muted); text-align: center; margin: 40px 0; }
+    .xjob { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+    .xjob b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .xjob small { color: var(--muted); grid-column: 1; }
+    .xjob .acts { grid-row: 1 / span 2; grid-column: 2; display: flex; gap: 6px; }
+    .xjob .bar { grid-column: 1 / -1; height: 4px; border-radius: 2px; overflow: hidden; background: color-mix(in srgb, var(--accent) 18%, transparent); }
+    .xjob .bar i { display: block; height: 100%; background: var(--accent); transition: width .6s ease; }
+    .xjob.err small { color: #dc2626; }
+    .xqueue h4 { margin: 6px 2px 0; font-size: 12px; font-weight: 600; color: var(--muted); }
+    #x-info { color: var(--muted); font-size: 12px; min-height: 16px; }
+    .xopts { display: flex; flex-wrap: wrap; gap: 14px; align-items: end; }
+    .xopts label { display: grid; gap: 4px; color: var(--muted); font-size: 12px; }
+    .xopts select { height: 29px; border: 1px solid var(--line); border-radius: 6px; padding: 0 6px; background: var(--bg); color: var(--fg); font: inherit; }
+    .pick { display: flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+    .pick button { border: 0; padding: 5px 11px; background: var(--bg); color: var(--fg); cursor: pointer; }
+    .pick button + button { border-left: 1px solid var(--line); }
+    .pick button.on { background: var(--active); font-weight: 600; }
+    .xrow { display: flex; align-items: center; gap: 8px; }
+    #x-status { flex: 1; color: var(--muted); font-size: 12px; }
+    #json-dlg { width: min(720px, calc(100vw - 40px)); padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--fg); }
+    #json-dlg::backdrop { background: rgba(0,0,0,.35); }
+    #json-dlg form { display: grid; gap: 10px; }
+    #json-dlg [hidden] { display: none; }
+    #json-dlg strong { font-size: 14px; }
+    #json-dlg textarea { height: min(60vh, 520px); resize: vertical; border: 1px solid var(--line); border-radius: 6px; padding: 8px; background: var(--bg); color: var(--fg);
+      font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre; }
+    #json-dlg .row { display: flex; align-items: center; gap: 8px; }
+    #json-dlg .row span { flex: 1; color: var(--muted); font-size: 12px; }
+    #import-btn { width: 28px; height: 28px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; font-size: 16px; font-weight: 400; }
+    #import-btn:hover { background: var(--hover); color: var(--fg); }
+    .sw { display: inline-block; width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0,0,0,.15) inset; margin-right: -3px; }
+    .sws { display: inline-flex; padding-right: 3px; }
+
+    #stage { flex: 1; position: relative; overflow: hidden; }
+    #page { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; pointer-events: none; box-shadow: 0 2px 14px rgba(0,0,0,.14); }
+    #page[hidden] { display: none; }
+    #canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; user-select: none; cursor: crosshair; }
+    #canvas.space { cursor: grab; }
+    #canvas [data-id] { cursor: move; }
+    #canvas.panning, #canvas.space.panning { cursor: grabbing; }
+    #edit { position: absolute; display: none; z-index: 2; resize: none; border: 1px solid var(--accent); border-radius: 6px; padding: 4px 6px;
+      font-size: 15px; text-align: center; background: #fff; color: #1f2328; outline: 0; box-shadow: 0 4px 16px rgba(0,0,0,.12); }
+    #empty { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); }
+    #empty[hidden] { display: none; }
+
+    #gallery { position: absolute; right: 10px; top: 55px; z-index: 5; width: min(580px, calc(100% - 20px)); max-height: calc(100% - 70px); overflow-y: auto;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 8px; padding: 10px;
+      background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 8px 28px rgba(0,0,0,.12); }
+    #gallery[hidden] { display: none; }
+    #gallery button { border: 1px solid var(--line); border-radius: 6px; padding: 6px; background: var(--bg); cursor: pointer; text-align: left; min-width: 0; }
+    #gallery button:hover { background: var(--hover); }
+    #gallery button.on { border-color: var(--accent); }
+    #gallery img { display: block; width: 100%; height: 96px; object-fit: contain; border-radius: 4px; margin-bottom: 6px; }
+    #gallery .row { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    #gallery strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+    #gallery small { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; }
+    #gallery p { grid-column: 1 / -1; margin: 2px; color: var(--muted); font-size: 12px; }
+
+    #scenes { display: flex; align-items: center; gap: 4px; height: 38px; padding: 0 10px; background: var(--panel); border-bottom: 1px solid var(--line); }
+    #scenes[hidden] { display: none; }
+    #scenes .tab { border: 0; border-radius: 6px; padding: 4px 10px; background: transparent; cursor: pointer; color: var(--muted); position: relative; }
+    #scenes .tab:hover { background: var(--hover); color: var(--fg); }
+    #scenes .tab.on { color: var(--fg); font-weight: 600; background: var(--active); }
+    #scenes .tab .bar { position: absolute; left: 8px; right: 8px; bottom: 2px; height: 2px; background: var(--accent); transform-origin: left; }
+    #scenes .grow { flex: 1; }
+    #scenes .btn { height: 26px; }
+    #scenes .check { display: inline-flex; align-items: center; gap: 5px; margin-right: 6px; color: var(--muted); font-size: 12.5px; cursor: pointer; user-select: none; }
+    #scenes .check input { margin: 0; accent-color: var(--accent); }
+    #scenes .steps { display: inline-flex; align-items: center; gap: 2px; margin-right: 6px; color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+    #scenes .steps span { min-width: 4.4em; text-align: center; }
+    #scenes .steps button { border: 0; background: transparent; color: var(--fg); cursor: pointer; font-size: 16px; line-height: 1; padding: 3px 7px; border-radius: 5px; }
+    #scenes .steps button:hover { background: var(--hover); }
+    #say { position: absolute; left: 50%; bottom: 34px; transform: translateX(-50%); max-width: min(760px, calc(100% - 40px)); padding: 10px 14px; border-radius: 8px;
+      background: var(--panel); border: 1px solid var(--line); box-shadow: 0 4px 16px rgba(0,0,0,.08); font-size: 14px; line-height: 1.45; text-align: center; }
+    #say[hidden] { display: none; }
+    #say.fresh { animation: say-in .35s ease-out; }
+    @keyframes say-in { from { opacity: 0; transform: translate(-50%, 4px); } to { opacity: 1; transform: translate(-50%, 0); } }
+    .panel { position: absolute; right: 10px; top: 55px; z-index: 6; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 8px 28px rgba(0,0,0,.12); }
+    .panel[hidden] { display: none; }
+    #history { width: 300px; max-height: calc(100% - 70px); overflow-y: auto; padding: 6px; }
+    #history button { display: block; width: 100%; text-align: left; border: 0; border-radius: 6px; padding: 7px 9px; background: transparent; cursor: pointer; }
+    #history button:hover { background: var(--hover); }
+    #history button.on { background: var(--active); }
+    #history small { display: block; color: var(--muted); font-size: 11.5px; }
+    #history p { margin: 6px 9px; color: var(--muted); font-size: 12px; }
+    #previewbar { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 5; display: flex; align-items: center; gap: 8px; padding: 6px 8px 6px 12px;
+      background: var(--panel); border: 1px solid var(--accent); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.1); white-space: nowrap; }
+    #previewbar[hidden] { display: none; }
+    #ask { position: absolute; z-index: 6; width: 320px; padding: 10px; display: grid; gap: 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 8px 28px rgba(0,0,0,.14); }
+    #ask[hidden] { display: none; }
+    #ask textarea { width: 100%; min-height: 54px; resize: vertical; border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; background: var(--bg); color: var(--fg); font: inherit; outline: 0; }
+    #ask textarea:focus { border-color: var(--accent); }
+    #ask .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+    #ask .chips button { border: 1px solid var(--line); border-radius: 999px; padding: 2px 9px; background: var(--bg); cursor: pointer; font-size: 12px; color: var(--muted); }
+    #ask .chips button:hover { color: var(--fg); border-color: var(--accent); }
+    #ask .row, #tray .row { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+    #ask small { flex: 1; color: var(--muted); font-size: 11.5px; }
+    #tray { position: absolute; right: 12px; bottom: 34px; z-index: 5; width: 300px; padding: 10px; display: grid; gap: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 8px 28px rgba(0,0,0,.12); }
+    #tray[hidden] { display: none; }
+    #tray ol { margin: 0; padding-left: 20px; max-height: 180px; overflow-y: auto; }
+    #tray li { margin: 2px 0; }
+    #tray li button { border: 0; background: transparent; color: var(--muted); cursor: pointer; padding: 0 4px; }
+    #tray strong { font-size: 12.5px; }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn.primary:hover { filter: brightness(1.08); background: var(--accent); }
+    #toast { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); z-index: 4; padding: 7px 12px; border-radius: 6px;
+      background: var(--fg); color: var(--bg); font-size: 12.5px; pointer-events: none; transition: opacity .15s; }
+    #toast[hidden] { display: block; opacity: 0; }
+    #queue-btn[hidden], #fit-btn[hidden] { display: none; }
+    #fit-btn { position: absolute; right: 12px; bottom: 10px; z-index: 2; height: 30px; box-shadow: 0 2px 8px rgba(0,0,0,.08); color: var(--fg); }
+    #hint { position: absolute; left: 12px; bottom: 8px; color: var(--muted); font-size: 11.5px; pointer-events: none; }
+    @media (max-width: 900px) { aside { width: 190px; } #search { width: 110px; } #hint, #status { display: none; } }
+  </style>
+</head>
+<body>
+  <div id="layout">
+    <aside>
+      <div class="brand">
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+        Giotto
+        <button id="theme-btn" title="Light, dark, or follow the system"></button>
+        <button id="import-btn" title="Import a diagram from its JSON">+</button>
+      </div>
+      <div id="kinds" role="tablist" aria-label="Show"><button data-kind="all">All</button><button data-kind="diagram">Diagrams</button><button data-kind="page">Images</button></div>
+      <nav id="list"></nav>
+    </aside>
+    <main>
+      <header>
+        <input id="title" aria-label="Diagram title" />
+        <span id="status"></span>
+        <input id="search" type="search" placeholder="Search  ⌘F" aria-label="Search this diagram" />
+        <button id="history-btn" class="btn" title="Every change is a version; look back and restore">History</button>
+        <button id="style-btn" class="btn" aria-haspopup="true"></button>
+        <button id="queue-btn" class="btn" title="Exports in progress and ready to download" hidden><span class="spin"></span><span></span></button>
+        <button id="export-btn" class="btn" aria-haspopup="dialog">Export</button>
+      </header>
+      <dialog id="export-dlg"><form method="dialog">
+        <div class="xhead"><strong id="x-title">Export</strong><button aria-label="Close" title="Close (Esc)">✕</button></div>
+        <div class="xbody">
+          <nav id="x-formats" aria-label="Format"></nav>
+          <div class="xmain">
+            <div class="xstage">
+              <div id="x-preview"></div>
+              <div id="x-render" role="status" hidden><span class="spin"></span><span></span></div>
+              <div id="x-progress" hidden><i></i></div>
+            </div>
+            <div id="x-info"></div>
+            <div class="xopts">
+              <label data-opt="theme">Look <span class="pick" data-key="theme"><button type="button" data-v="light">Light</button><button type="button" data-v="dark">Dark</button></span></label>
+              <label data-opt="scene">Scene <select id="x-scene"></select></label>
+              <label data-opt="aspect">Shape <span class="pick" data-key="aspect"><button type="button" data-v="original">Diagram</button><button type="button" data-v="16:9">16:9</button><button type="button" data-v="1:1">1:1</button><button type="button" data-v="9:16">9:16</button></span></label>
+              <label data-opt="res">Size <span class="pick" data-key="res"><button type="button" data-v="720">720p</button><button type="button" data-v="1080">1080p</button><button type="button" data-v="1440">1440p</button><button type="button" data-v="2160">4K</button></span></label>
+              <label data-opt="fps">Frame rate <span class="pick" data-key="fps"><button type="button" data-v="24">24</button><button type="button" data-v="30">30</button><button type="button" data-v="60">60</button></span></label>
+              <label data-opt="speed">Speed <span class="pick" data-key="speed"><button type="button" data-v="0.5">0.5×</button><button type="button" data-v="1">1×</button><button type="button" data-v="1.5">1.5×</button><button type="button" data-v="2">2×</button></span></label>
+            </div>
+            <div class="xrow"><span id="x-status"></span><button type="button" id="x-copy" class="btn">Copy</button><button type="button" id="x-share" class="btn" title="Upload as a secret GitHub gist: only people with the link can see it">Share link</button><button type="button" id="x-go" class="btn primary">Download</button></div>
+          </div>
+        </div>
+      </form></dialog>
+      <dialog id="json-dlg"><form method="dialog">
+        <strong id="json-title"></strong>
+        <textarea id="json-text" spellcheck="false" aria-label="Diagram JSON"></textarea>
+        <div class="row"><span id="json-status"></span><button id="json-copy" class="btn" type="button">Copy</button><button id="json-import" class="btn" type="button">Import</button><button class="btn">Close</button></div>
+      </form></dialog>
+      <div id="scenes" hidden></div>
+      <div id="gallery" hidden></div>
+      <div id="history" class="panel" hidden></div>
+      <div id="stage">
+        <iframe id="page" sandbox="allow-same-origin" title="Page" hidden></iframe>
+        <svg id="canvas" xmlns="http://www.w3.org/2000/svg"></svg>
+        <textarea id="edit" rows="1"></textarea>
+        <div id="empty">No diagrams yet. Ask your agent to draw something.</div>
+        <div id="say" hidden></div>
+        <div id="toast" hidden></div>
+        <div id="previewbar" hidden><span id="preview-label"></span><button id="preview-restore" class="btn primary">Restore this version</button><button id="preview-close" class="btn">Back to latest</button></div>
+        <div id="ask" hidden>
+          <textarea id="ask-text" placeholder="What should change here?"></textarea>
+          <div class="chips" id="ask-chips"></div>
+          <div class="row"><small>Enter to add · Esc to cancel</small><button id="ask-cancel" class="btn">Cancel</button><button id="ask-add" class="btn primary">Add</button></div>
+        </div>
+        <div id="tray" hidden>
+          <strong id="tray-title"></strong>
+          <ol id="tray-list"></ol>
+          <div class="row"><button id="tray-clear" class="btn">Clear</button><button id="tray-copy" class="btn primary">Copy requested changes</button></div>
+        </div>
+        <button id="fit-btn" class="btn" title="Fit everything in view (Shift+1)" aria-label="Fit everything in view"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>Fit</button>
+        <div id="hint">Drag a box to move it · drag over an area to request a change · double-click to rename · [ ] send back / bring front · scroll or Space+drag to pan · ⌘/Ctrl + scroll to zoom · ⌘Z undo</div>
+      </div>
+    </main>
+  </div>
+  <script type="module">
+    import { drawContent, toSvg, fitTo, exportFrame, resolve, bounds, boundsOf, isRouted, labelOf, searchText, parentsOf, SAMPLE, cameraView, resolveFrame } from './lib/render.js';
+    import { resolveStyle } from './lib/styles.js';
+    import { diffDocs, slugify } from './lib/edit.js';
+    import { timeline, frameAt, forExport, usesStage } from './lib/scenes.js';
+    import { pageHtml, pageBox } from './lib/page.js';
+
+    const $ = (id) => document.getElementById(id);
+    const svg = $('canvas');
+    const status = (msg) => ($('status').textContent = msg);
+    const serialize = (d) => JSON.stringify(d, null, 2) + '\n';
+    const snap = (n) => Math.round(n / 10) * 10; // keeps hand-moved things lined up
+    const store = { get: (k) => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
+
+    // The code version this page belongs to: saves and live updates only work while it matches the server's.
+    const { version } = await (await fetch('/api/info')).json();
+
+    // ---- state ----
+
+    let diagrams = [], current = null, doc = null, base = null;
+    let view = { x: 0, y: 0, zoom: 1 };
+    let selected = new Set(), matches = [], matchAt = 0;
+    let undo = [], drag = null, saveTimer, lastInput = 0, spaceDown = false;
+    let styles = {}, styleId = 'default', stylesText = '', S = resolveStyle();
+    let theme = store.get('giotto-theme') || 'auto';
+    const el = (id) => doc?.elements.find((e) => e.id === id);
+    // Where everything ends up (groups, layouts, auto sizes, notes, arrows): computed, never stored.
+    const placed = () => (doc ? resolve(doc, S) : []);
+    const placedEl = (id) => placed().find((e) => e.id === id);
+
+    const HINT = $('hint').textContent;
+    const HINT_PAGE = 'An image: the agent writes its HTML. Drag over an area to request a change · scroll or Space+drag to pan · ⌘/Ctrl + scroll to zoom';
+
+    // ---- drawing ----
+
+    function render() {
+      const r = svg.getBoundingClientRect();
+      const frame = !preview && player.on && doc?.scenes?.length ? frameAt(doc, player.scene, player.t, player.tl) : null;
+      // A scene can switch the style, and move the camera: while it plays, the canvas follows.
+      const FS = frame?.style && styles[frame.style.id] ? resolveStyle(styles[frame.style.id], isDark()) : S;
+      if (frame?.camera) {
+        const v = cameraView(frame, resolveFrame(doc, FS, frame), FS, r.width / r.height);
+        view = { x: v.x, y: v.y, zoom: r.width / v.w };
+      }
+      svg.setAttribute('viewBox', `${view.x} ${view.y} ${r.width / view.zoom} ${r.height / view.zoom}`);
+      // The grid is behind everything (a page sits between it and the canvas, which only draws overlays then).
+      const st = $('stage').style;
+      st.backgroundColor = FS.background;
+      st.backgroundImage = FS.grid ? `radial-gradient(${FS.grid} 1.2px, transparent 1.2px)` : 'none';
+      st.backgroundSize = `${20 * view.zoom}px ${20 * view.zoom}px`;
+      st.backgroundPosition = `${-view.x * view.zoom}px ${-view.y * view.zoom}px`;
+      showPage(preview?.doc || doc);
+      const showing = preview?.doc || doc; // an old version while previewing history
+      // The image as exports make it: background, header and footer around the diagram, with its size.
+      let frameOut = '';
+      if (showFrame && showing && showing.html === undefined && hasFrame(FS)) {
+        const f = exportFrame(showing, FS, resolveFrame(showing, FS, frame)), z = view.zoom;
+        frameOut = `<defs>${f.defs.join('')}</defs>${f.background}${f.bands}<rect x="${f.x}" y="${f.y}" width="${f.w}" height="${f.h}" rx="${f.radius}" fill="none" stroke="${FS.text}" stroke-opacity="0.3" stroke-width="${1 / z}" pointer-events="none"/>`
+          + `<text x="${f.x}" y="${f.y - 8 / z}" font-size="${11 / z}" fill="${FS.text}" fill-opacity="0.5" font-family="system-ui, sans-serif" pointer-events="none">${Math.ceil(f.w)} × ${f.h}</text>`;
+      }
+      let out = frameOut + (showing ? drawContent(showing, S, { selected: preview ? [] : [...selected], highlight: matches, current: matches[matchAt], zoom: view.zoom, frame, styles }) : '');
+      // Staged change requests: numbered dashed areas.
+      (staged[current] || []).forEach((it, i) => {
+        const r = it.area, z = view.zoom;
+        out += `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="4" fill="#f59e0b" fill-opacity="0.07" stroke="#f59e0b" stroke-width="${1.5 / z}" stroke-dasharray="${6 / z} ${4 / z}" pointer-events="none"/>`;
+        out += `<circle cx="${r.x}" cy="${r.y}" r="${10 / z}" fill="#f59e0b" pointer-events="none"/><text x="${r.x}" y="${r.y}" font-size="${11 / z}" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central" font-family="system-ui, sans-serif" pointer-events="none">${i + 1}</text>`;
+      });
+      // A page: the image's edge, and its size, so you see exactly what gets exported.
+      if (showing?.html !== undefined) {
+        const { w, h } = pageSize(showing), z = view.zoom;
+        out = `<rect x="0" y="0" width="${w}" height="${h}" fill="none" stroke="${S.text}" stroke-opacity="0.35" stroke-width="${1 / z}" pointer-events="none"/>`
+          + `<text x="0" y="${-8 / z}" font-size="${11 / z}" fill="${S.text}" fill-opacity="0.5" font-family="system-ui, sans-serif" pointer-events="none">${w} × ${h}</text>` + out;
+      }
+      $('say').hidden = !frame?.say;
+      if (frame?.say && $('say').textContent !== frame.say) {
+        // New narration fades in.
+        $('say').textContent = frame.say;
+        $('say').classList.remove('fresh');
+        void $('say').offsetWidth;
+        $('say').classList.add('fresh');
+      }
+      stepCount();
+      document.querySelectorAll('#scenes .bar').forEach((b, i) => (b.style.transform = `scaleX(${i === player.scene && player.tl ? Math.min(1, player.t / player.tl.scenes[i].duration) : 0})`));
+      if (drag?.type === 'area') {
+        const a = area(drag);
+        out += `<rect x="${a.x}" y="${a.y}" width="${a.w}" height="${a.h}" rx="3" fill="#2563eb" fill-opacity="0.06" stroke="#2563eb" stroke-width="${1.5 / view.zoom}" stroke-dasharray="${6 / view.zoom} ${4 / view.zoom}"/>`;
+      }
+      svg.innerHTML = out;
+    }
+
+    // A page: the agent's HTML in a frame at 0,0 of the canvas, panned and zoomed with it.
+    // Its size is the whole image: the page plus the style's header and footer.
+    const pageSize = (d) => {
+      const b = pageBox(d, styles[styleId], isDark());
+      return { x: 0, y: 0, w: b.w, h: b.total };
+    };
+    let pageKey = '';
+    function showPage(d) {
+      const frame = $('page');
+      frame.hidden = d?.html === undefined;
+      if (frame.hidden) return (pageKey = '');
+      const { w, h } = pageSize(d);
+      const html = pageHtml(d, styles[styleId], { dark: isDark() });
+      if (html !== pageKey) frame.srcdoc = pageKey = html; // only when it changed: reloading flickers
+      Object.assign(frame.style, { width: `${w}px`, height: `${h}px`, transform: `translate(${-view.x * view.zoom}px, ${-view.y * view.zoom}px) scale(${view.zoom})` });
+    }
+
+    function fit() {
+      const r = svg.getBoundingClientRect();
+      let b = doc?.html !== undefined ? pageSize(doc) : boundsOf(placed(), S);
+      if (doc && doc.html === undefined && showFrame && hasFrame(S)) { const f = exportFrame(doc, S, placed()); b = { x: f.x, y: f.y, w: f.w, h: f.h }; } // the header and footer too
+      if (!b.w && !b.h) return (view = { x: -40, y: -40, zoom: 1 });
+      const zoom = Math.min(1.5, (r.width - 80) / b.w, (r.height - 80) / b.h);
+      view = { zoom, x: b.x + b.w / 2 - r.width / zoom / 2, y: b.y + b.h / 2 - r.height / zoom / 2 };
+    }
+
+    function centerOn(id) {
+      const e = placedEl(id);
+      if (!e) return;
+      const r = svg.getBoundingClientRect(), b = bounds(e, S);
+      view.x = b.x + b.w / 2 - r.width / view.zoom / 2;
+      view.y = b.y + b.h / 2 - r.height / view.zoom / 2;
+    }
+
+    // ---- saving: only what changed, merged by the server into the file as it is now ----
+
+    async function send(patch) {
+      if (!Object.keys(patch).length) return;
+      const res = await fetch(`/api/doc?id=${current}`, { method: 'PUT', body: JSON.stringify({ version, patch }) });
+      if (res.status === 409) return location.reload(); // Giotto was updated: this page is old code
+      if (res.ok) show((await res.json()).text, true);
+    }
+
+    // A finished change by the user: remember the old version for undo, then save it.
+    function commit() {
+      const patch = diffDocs(JSON.parse(base), doc);
+      if (!Object.keys(patch).length) return;
+      undo.push(base);
+      send(patch);
+      runSearch();
+    }
+
+    // Selection is saved too (the agent reads it), but isn't worth an undo step.
+    function selectionChanged() {
+      doc.selectedIds = [...selected];
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => send({ selectedIds: doc.selectedIds }), 300);
+    }
+
+    // A version of the file arrived: from the agent, another tab, a poll, or our own save coming back.
+    let waiting = null; // a version that arrived mid-drag
+    function show(text, own = false) {
+      if (text === base) return;
+      // Don't yank things out from under a drag: apply it when the drag ends (the save merges anyway).
+      if (drag && drag.type !== 'pan' && drag.type !== 'area') return void (waiting = text);
+      const next = JSON.parse(text);
+      next.elements ||= [];
+      const foreign = !own && !(doc && serialize(next) === serialize(doc));
+      if (foreign && base !== null) undo.push(base);
+      base = text;
+      doc = next;
+      selected = new Set([...selected].filter(el));
+      if (document.activeElement !== $('title')) $('title').value = doc.title || current;
+      runSearch();
+      sceneBar();
+      const isPage = doc.html !== undefined;
+      $('hint').textContent = isPage ? HINT_PAGE : HINT;
+      if (foreign) status(`updated ${new Date().toLocaleTimeString()}`);
+      render();
+    }
+
+    async function open(id) {
+      if (!id || id === current) return;
+      const res = await fetch(`/api/doc?id=${id}`);
+      if (!res.ok) return;
+      current = id;
+      base = null;
+      doc = null;
+      Object.assign(player, { on: false, playing: false, scene: 0, t: 0 });
+      preview = null;
+      $('previewbar').hidden = true;
+      $('ask').hidden = true;
+      asking = null;
+      undo = [];
+      selected = new Set();
+      history.replaceState(null, '', `#${id}`);
+      show(await res.text());
+      selected = new Set(doc.selectedIds || []);
+      fit();
+      showTray();
+      refreshList();
+    }
+
+    // ---- sidebar ----
+
+    const ago = (iso) => {
+      const s = (Date.now() - new Date(iso)) / 1000;
+      return s < 60 ? 'just now' : s < 3600 ? `${Math.floor(s / 60)}m ago` : s < 86400 ? `${Math.floor(s / 3600)}h ago` : new Date(iso).toLocaleDateString();
+    };
+
+    // Which kind the sidebar lists: all, diagrams, or images (pages). Remembered in this browser.
+    let kind = store.get('giotto-kind') || 'all';
+    const syncKinds = () => document.querySelectorAll('#kinds button').forEach((b) => {
+      b.classList.toggle('on', b.dataset.kind === kind);
+      b.setAttribute('aria-selected', b.dataset.kind === kind);
+    });
+    syncKinds();
+    $('kinds').onclick = (ev) => {
+      const k = ev.target.closest('button')?.dataset.kind;
+      if (!k) return;
+      store.set('giotto-kind', (kind = k));
+      syncKinds();
+      refreshList();
+    };
+
+    // Diagrams: two boxes and an arrow. Images: a picture.
+    const ICONS = {
+      diagram: '<svg class="ic" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-label="Diagram"><rect x="1.5" y="2" width="5" height="4" rx="1"/><rect x="9.5" y="10" width="5" height="4" rx="1"/><path d="M4 6v4.5a1.5 1.5 0 0 0 1.5 1.5H9.5"/></svg>',
+      page: '<svg class="ic" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-label="Image"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><circle cx="5.5" cy="6" r="1.2"/><path d="M2 12l4-3.5 3 2.5 2.5-2 3 2.5"/></svg>',
+    };
+
+    let listKey = '';
+    async function refreshList() {
+      diagrams = await (await fetch('/api/diagrams')).json();
+      const rows = diagrams.filter((d) => kind === 'all' || d.kind === kind).map((d) => ({ ...d, when: `${ago(d.updated)} · ${d.kind === 'page' ? 'image' : `${d.elements} shapes`}` }));
+      const key = JSON.stringify([current, kind, rows.map((r) => [r.id, r.title, r.when])]);
+      if (key === listKey) return; // nothing new: don't rebuild under the mouse
+      listKey = key;
+      $('list').replaceChildren(...rows.map((d) => {
+        const b = document.createElement('button');
+        b.className = d.id === current ? 'on' : '';
+        b.innerHTML = ICONS[d.kind === 'page' ? 'page' : 'diagram'] + '<span class="t"></span><small></small><span class="del" role="button" tabindex="0" title="Delete diagram" aria-label="Delete diagram">×</span>';
+        b.querySelector('.t').textContent = d.title;
+        b.querySelector('small').textContent = d.when;
+        b.onclick = () => open(d.id);
+        b.querySelector('.del').onclick = (ev) => {
+          ev.stopPropagation();
+          remove(d);
+        };
+        return b;
+      }));
+      if (!rows.length && diagrams.length) {
+        const p = document.createElement('p');
+        p.textContent = kind === 'page' ? 'No images yet. Ask your agent for one: a results card, a poster, a chart.' : 'No diagrams yet.';
+        $('list').append(p);
+      }
+      $('empty').hidden = diagrams.length > 0;
+    }
+
+    async function remove(d) {
+      if (!confirm(`Delete "${d.title}"? This can't be undone from the canvas.`)) return;
+      const res = await fetch(`/api/doc?id=${d.id}`, { method: 'DELETE' });
+      if (!res.ok) return status(`couldn't delete: ${(await res.json()).error}`);
+      check();
+    }
+
+    $('title').addEventListener('change', () => {
+      doc.title = $('title').value.trim() || current;
+      commit();
+      refreshList();
+    });
+    $('title').addEventListener('keydown', (e) => e.key === 'Enter' && e.target.blur());
+
+    // ---- mouse: select, move, resize, pan, zoom ----
+
+    const toWorld = (ev) => {
+      const r = svg.getBoundingClientRect();
+      return { x: view.x + (ev.clientX - r.left) / view.zoom, y: view.y + (ev.clientY - r.top) / view.zoom };
+    };
+    // Things whose place is computed don't move on their own: arrows tied to shapes, pinned notes,
+    // children of a layout group. Dragging a free group moves what's in it; a layout group moves itself.
+    function movers(ids) {
+      const parent = parentsOf(doc.elements);
+      const out = new Set();
+      const add = (id) => {
+        const e = el(id);
+        if (!e || isRouted(e) || (e.type === 'note' && e.attachTo)) return;
+        if (e.type === 'group' && !e.layout) return (e.children || []).forEach(add);
+        if (el(parent[id])?.layout) return add(parent[id]);
+        out.add(id);
+      };
+      ids.forEach(add);
+      return [...out].map(el);
+    }
+
+    let lastDown = {};
+    svg.addEventListener('pointerdown', (ev) => {
+      if (!doc || ev.button > 1) return;
+      // Middle button or Space + drag pans, wherever you grab. An old version (history preview) only pans.
+      if (ev.button === 1 || spaceDown || preview) {
+        ev.preventDefault();
+        drag = { type: 'pan', sx: ev.clientX, sy: ev.clientY, x: view.x, y: view.y };
+        svg.classList.add('panning');
+        return svg.setPointerCapture(ev.pointerId);
+      }
+      $('edit').blur();
+      const p = toWorld(ev);
+      let id = ev.target.closest('[data-id]')?.dataset.id;
+      // A group moves only by its title bar; dragging its background draws a request area, like empty canvas.
+      const g = id && el(id)?.type === 'group' && placedEl(id);
+      if (g && p.y > g.y + (g.padding ?? S.groupPadding) * 0.6 + S.groupLabelSize * 1.4) id = undefined;
+      // Every click redraws the canvas, so the browser's own dblclick never fires: count clicks here.
+      const now = Date.now();
+      if (id && lastDown.id === id && now - lastDown.at < 400) {
+        lastDown = {};
+        return startEdit(id);
+      }
+      lastDown = { id, at: now };
+      if (ev.target.closest('[data-handle]')) {
+        const e = placedEl([...selected][0]);
+        drag = { type: 'resize', id: e.id, start: p, w: e.width, h: e.height };
+      } else if (id) {
+        if (ev.shiftKey) selected.has(id) ? selected.delete(id) : selected.add(id);
+        else if (!selected.has(id)) selected = new Set([id]);
+        const at = Object.fromEntries(placed().map((e) => [e.id, e]));
+        const orig = new Map(movers([...selected]).map((e) => [e.id, { x: at[e.id]?.x ?? e.x ?? 0, y: at[e.id]?.y ?? e.y ?? 0 }]));
+        drag = { type: 'move', start: p, orig };
+        selectionChanged();
+      } else {
+        if (!ev.shiftKey && selected.size) {
+          selected.clear();
+          selectionChanged();
+        }
+        drag = { type: 'area', start: p, end: p };
+      }
+      svg.setPointerCapture(ev.pointerId);
+      render();
+    });
+
+    svg.addEventListener('pointermove', (ev) => {
+      if (!drag) return;
+      const p = toWorld(ev);
+      if (drag.type === 'pan') {
+        view.x = drag.x - (ev.clientX - drag.sx) / view.zoom;
+        view.y = drag.y - (ev.clientY - drag.sy) / view.zoom;
+      } else if (drag.type === 'move') {
+        for (const [id, o] of drag.orig) {
+          const e = el(id);
+          if (e) Object.assign(e, { x: snap(o.x + p.x - drag.start.x), y: snap(o.y + p.y - drag.start.y) });
+        }
+      } else if (drag.type === 'area') {
+        drag.end = p;
+      } else if (drag.type === 'resize') {
+        const e = el(drag.id);
+        if (e) Object.assign(e, { width: Math.max(40, snap(drag.w + p.x - drag.start.x)), height: Math.max(30, snap(drag.h + p.y - drag.start.y)) });
+      }
+      render();
+    });
+
+    const endDrag = () => {
+      const was = drag;
+      drag = null;
+      svg.classList.remove('panning');
+      if (was?.type === 'area') askAbout(area(was));
+      else if (was && was.type !== 'pan') {
+        const later = waiting;
+        waiting = null;
+        // Nothing changed by the drag: just catch up with what arrived meanwhile.
+        if (!Object.keys(diffDocs(JSON.parse(base), doc)).length) return later && show(later);
+        commit(); // the server merges our move into the newest file and sends it back
+      }
+    };
+    svg.addEventListener('pointerup', endDrag);
+    svg.addEventListener('pointercancel', endDrag);
+
+    svg.addEventListener('wheel', (ev) => {
+      ev.preventDefault();
+      if (ev.ctrlKey || ev.metaKey) {
+        const p = toWorld(ev);
+        const zoom = Math.min(4, Math.max(0.1, view.zoom * Math.exp(-ev.deltaY * 0.01)));
+        view.x = p.x - (p.x - view.x) * (view.zoom / zoom);
+        view.y = p.y - (p.y - view.y) * (view.zoom / zoom);
+        view.zoom = zoom;
+      } else {
+        view.x += ev.deltaX / view.zoom;
+        view.y += ev.deltaY / view.zoom;
+      }
+      render();
+    }, { passive: false });
+
+    new ResizeObserver(render).observe(svg);
+    // Everything in view: the button, or Shift+1 (as in design tools).
+    const fitAll = () => (fit(), render());
+    $('fit-btn').onclick = fitAll;
+    document.addEventListener('keydown', (ev) => {
+      if (ev.shiftKey && ev.code === 'Digit1' && !ev.metaKey && !ev.ctrlKey && !ev.target.closest('input, textarea, [contenteditable]')) ev.preventDefault(), fitAll();
+    });
+    for (const ev of ['pointerdown', 'keydown', 'wheel']) document.addEventListener(ev, () => (lastInput = Date.now()), true);
+
+    // ---- change requests: draw an area, say what should change, stage several, copy them all at once ----
+
+    const area = (d) => ({ x: Math.min(d.start.x, d.end.x), y: Math.min(d.start.y, d.end.y), w: Math.abs(d.end.x - d.start.x), h: Math.abs(d.end.y - d.start.y) });
+    // Diagram id -> [{area, items, text}]; kept in this browser until copied or cleared, so a reload doesn't lose them.
+    const staged = new Proxy({}, {
+      get: (o, id) => (o[id] ??= JSON.parse(store.get(`giotto-staged-${String(id)}`) || '[]')),
+      set: (o, id, v) => ((o[id] = v), store.set(`giotto-staged-${String(id)}`, JSON.stringify(v)), true),
+    });
+    const keepStaged = () => (staged[current] = staged[current]); // write the current list back to storage
+    let asking = null;
+
+    // What's in an area, as lines the agent can act on.
+    function describeItems(items) {
+      const n = Math.round;
+      if (!items.length) return ['   (empty space)'];
+      return items.map((e) => {
+        if (e.page) return `   - <${e.tag}> "${e.text}" at x ${n(e.x)}, y ${n(e.y)}, size ${n(e.w)}×${n(e.h)}`;
+        const tags = e.tags?.length ? ` [tags: ${e.tags.join(', ')}]` : '';
+        const what = `   - ${e.type}${labelOf(e) ? ` "${labelOf(e).replace(/\n/g, ' ')}"` : ''} (id: ${e.id})${tags}`;
+        if (isRouted(e)) return `${what} from ${e.start.id} to ${e.end.id}`;
+        const b = bounds(e, S);
+        return `${what} at x ${n(b.x)}, y ${n(b.y)}, size ${n(b.w)}×${n(b.h)}`;
+      });
+    }
+
+    // On a page, what's in an area is the text it touches: each element that holds text itself, with where that
+    // text sits (the text, not the element's box: a headline's box is as wide as the page).
+    function pageItems(r) {
+      const page = $('page').contentDocument;
+      if (!page?.body) return [];
+      const out = [];
+      for (const node of page.body.querySelectorAll('*')) {
+        const texts = [...node.childNodes].filter((c) => c.nodeType === 3 && c.textContent.trim());
+        if (!texts.length) continue;
+        const range = page.createRange();
+        range.setStartBefore(texts[0]);
+        range.setEndAfter(texts.at(-1));
+        const b = range.getBoundingClientRect();
+        if (b.right < r.x || b.left > r.x + r.w || b.bottom < r.y || b.top > r.y + r.h) continue; // doesn't touch the area
+        const text = texts.map((c) => c.textContent).join(' ').replace(/\s+/g, ' ').trim();
+        out.push({ page: true, tag: node.tagName.toLowerCase(), text: text.slice(0, 80), x: b.left, y: b.top, w: b.width, h: b.height });
+        if (out.length >= 30) break;
+      }
+      return out;
+    }
+
+    const SUGGEST = {
+      items: ['Make this bigger', 'Rename this', 'Move this', 'Remove this', 'Change the color', 'Add an arrow to…', 'Add more detail', 'Simplify this'],
+      empty: ['Add a box here', 'Add a note here', 'Add a group here', 'Move something here'],
+    };
+
+    function askAbout(r) {
+      if (r.w * view.zoom < 5 && r.h * view.zoom < 5) return; // just a click on empty space
+      const inside = (b) => b.x >= r.x && b.y >= r.y && b.x + b.w <= r.x + r.w && b.y + b.h <= r.y + r.h;
+      const items = doc.html !== undefined ? pageItems(r) : placed().filter((e) => e.type !== 'legend').filter((e) => inside(bounds(e, S)));
+      selected = new Set(items.filter((e) => !e.page).map((e) => e.id));
+      selectionChanged();
+      asking = { area: r, items };
+      // Suggestions fill the box; the box sits next to the area.
+      $('ask-chips').replaceChildren(...SUGGEST[items.length ? 'items' : 'empty'].map((t) => {
+        const b = document.createElement('button');
+        b.textContent = t;
+        b.onclick = () => {
+          const box = $('ask-text');
+          box.value = box.value ? `${box.value.trimEnd()} ${t.toLowerCase()}` : t;
+          box.focus();
+        };
+        return b;
+      }));
+      const st = $('stage').getBoundingClientRect(), sv = svg.getBoundingClientRect();
+      const left = sv.left - st.left + (r.x + r.w - view.x) * view.zoom + 10, top = sv.top - st.top + (r.y - view.y) * view.zoom;
+      Object.assign($('ask').style, { left: `${Math.max(8, Math.min(left, st.width - 330))}px`, top: `${Math.max(8, Math.min(top, st.height - 190))}px` });
+      $('ask-text').value = '';
+      $('ask').hidden = false;
+      render();
+      setTimeout(() => $('ask-text').focus());
+    }
+
+    function stageRequest() {
+      const text = $('ask-text').value.trim();
+      if (!asking || !text) return;
+      staged[current].push({ ...asking, text });
+      keepStaged();
+      closeAsk();
+      showTray();
+    }
+    function closeAsk() {
+      asking = null;
+      $('ask').hidden = true;
+      render();
+    }
+    $('ask-add').onclick = stageRequest;
+    $('ask-cancel').onclick = closeAsk;
+    $('ask-text').addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' && !ev.shiftKey) ev.preventDefault(), stageRequest();
+      if (ev.key === 'Escape') closeAsk();
+    });
+
+    function showTray() {
+      const list = staged[current] || [];
+      $('tray').hidden = !list.length;
+      $('tray-title').textContent = `${list.length} requested change${list.length === 1 ? '' : 's'}`;
+      $('tray-list').replaceChildren(...list.map((it, i) => {
+        const li = document.createElement('li');
+        li.textContent = it.text;
+        const x = document.createElement('button');
+        x.textContent = '✕';
+        x.title = 'Remove';
+        x.onclick = () => (list.splice(i, 1), keepStaged(), showTray());
+        li.append(x);
+        return li;
+      }));
+      render();
+    }
+    $('tray-clear').onclick = () => ((staged[current] = []), showTray());
+    $('tray-copy').onclick = async () => {
+      const list = staged[current] || [];
+      const n = Math.round;
+      const text = [
+        `Requested changes (${list.length}) for Giotto ${doc.html !== undefined ? 'page' : 'diagram'} "${doc.title || current}" (id: ${current}):`,
+        ...list.flatMap((it, i) => [
+          '',
+          `${i + 1}. ${it.text}`,
+          `   Area x ${n(it.area.x)}..${n(it.area.x + it.area.w)}, y ${n(it.area.y)}..${n(it.area.y + it.area.h)}, containing:`,
+          ...describeItems(it.items),
+        ]),
+      ].join('\n');
+      try {
+        await navigator.clipboard.writeText(text);
+        staged[current] = []; // copied: the staged requests are done
+        showTray();
+        toast(`Copied ${list.length} requested change${list.length === 1 ? '' : 's'}. Paste it to your agent.`);
+      } catch {
+        toast('Could not copy to the clipboard');
+      }
+    };
+
+    // ---- history: every change is a version; preview one, restore it as the newest ----
+
+    let preview = null; // {v, doc} while looking at an old version
+    const SOURCE = { agent: 'agent', canvas: 'you, on the canvas', file: 'file edit', restore: 'restore', created: 'created', 'before history': 'before history' };
+
+    async function showHistory() {
+      const { versions } = await (await fetch(`/api/history?id=${current}`)).json();
+      const rows = versions.map((h, i) => {
+        const b = document.createElement('button');
+        b.className = (preview ? preview.v === h.v : i === 0) ? 'on' : '';
+        b.innerHTML = '<span></span><small></small>';
+        b.firstChild.textContent = `v${h.v}${i === 0 ? ' · latest' : ''}`;
+        b.lastChild.textContent = `${ago(h.at)} · ${SOURCE[h.source] || h.source}${h.from ? ` · restored from v${h.from}` : ''}`;
+        b.onclick = () => (i === 0 ? closePreview() : openPreview(h.v));
+        return b;
+      });
+      const tip = document.createElement('p');
+      tip.textContent = versions.length ? 'Pick a version to look at it. Restoring makes it the newest version; nothing is lost.' : 'No versions yet: the first change starts the history.';
+      $('history').replaceChildren(...rows, tip);
+      $('gallery').hidden = true;
+      $('history').hidden = false;
+    }
+
+    async function openPreview(v) {
+      const text = await (await fetch(`/api/history/version?id=${current}&v=${v}`)).text();
+      preview = { v, doc: JSON.parse(text) };
+      stopPlayer();
+      $('preview-label').textContent = `Looking at v${v}`;
+      $('previewbar').hidden = false;
+      render();
+      showHistory();
+    }
+    function closePreview() {
+      preview = null;
+      $('previewbar').hidden = true;
+      render();
+      if (!$('history').hidden) showHistory();
+    }
+    $('preview-close').onclick = closePreview;
+    $('preview-restore').onclick = async () => {
+      const v = preview.v;
+      const res = await (await fetch(`/api/history/restore?id=${current}`, { method: 'POST', body: JSON.stringify({ v }) })).json();
+      closePreview();
+      toast(`Restored v${v} as v${res.v}`);
+    };
+    $('history-btn').onclick = (ev) => {
+      ev.stopPropagation();
+      $('history').hidden ? showHistory() : ($('history').hidden = true);
+    };
+    document.addEventListener('pointerdown', (ev) => {
+      if (!ev.target.closest('#history, #history-btn')) $('history').hidden = true;
+    });
+
+    let toastTimer;
+    function toast(msg) {
+      $('toast').textContent = msg;
+      $('toast').hidden = false;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => ($('toast').hidden = true), 2500);
+    }
+
+    // ---- double-click: rename ----
+
+    let editing = null;
+    function startEdit(id) {
+      const e = placedEl(id);
+      if (!e) return;
+      const b = bounds(e, S), r = svg.getBoundingClientRect(), s = $('stage').getBoundingClientRect();
+      const w = Math.max(140, b.w * view.zoom);
+      const box = $('edit');
+      Object.assign(box.style, {
+        display: 'block', width: `${w}px`,
+        left: `${r.left - s.left + (b.x + b.w / 2 - view.x) * view.zoom - w / 2}px`,
+        top: `${r.top - s.top + (b.y + b.h / 2 - view.y) * view.zoom - 18}px`,
+        textAlign: e.type === 'text' ? 'left' : 'center',
+        fontFamily: S.font,
+      });
+      box.value = labelOf(e);
+      editing = id;
+      // Focus after this click is fully handled, or the click's own blur closes the box again.
+      setTimeout(() => { box.focus(); box.select(); });
+    }
+
+    function finishEdit(keep) {
+      if (!editing) return;
+      const e = el(editing), text = $('edit').value.trim();
+      editing = null;
+      $('edit').style.display = 'none';
+      if (!keep || !e) return;
+      const block = e.content?.find((b) => b.type === 'title' || b.type === 'text');
+      if (block) { if (text) block.text = text; }
+      else if (e.type === 'text' || e.type === 'note') { if (text) e.text = text; }
+      else if (e.label?.title !== undefined) e.label = { ...e.label, title: text };
+      else if (text) e.label = { ...e.label, text };
+      else if (!e.label?.lines) delete e.label;
+      else delete e.label.text;
+      commit();
+      render();
+    }
+    $('edit').addEventListener('blur', () => finishEdit(true));
+    $('edit').addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); finishEdit(true); }
+      if (ev.key === 'Escape') finishEdit(false);
+    });
+
+    // ---- search ----
+
+    function runSearch() {
+      const q = $('search').value.trim().toLowerCase();
+      matches = q && doc ? doc.elements.filter((e) => searchText(e).toLowerCase().includes(q)).map((e) => e.id) : [];
+      matchAt = Math.min(matchAt, Math.max(0, matches.length - 1));
+      if (q) status(matches.length ? `${matchAt + 1} of ${matches.length}` : 'no matches');
+    }
+    $('search').addEventListener('input', () => {
+      matchAt = 0;
+      runSearch();
+      if (matches.length) centerOn(matches[0]);
+      render();
+    });
+    $('search').addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' && matches.length) {
+        matchAt = (matchAt + (ev.shiftKey ? matches.length - 1 : 1)) % matches.length;
+        runSearch();
+        centerOn(matches[matchAt]);
+        render();
+      }
+      if (ev.key === 'Escape') {
+        $('search').value = '';
+        runSearch();
+        render();
+        $('search').blur();
+      }
+    });
+
+    // ---- keyboard ----
+
+    document.addEventListener('keyup', (ev) => {
+      if (ev.key === ' ') svg.classList.toggle('space', (spaceDown = false));
+    });
+    document.addEventListener('keydown', (ev) => {
+      const typing = ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName);
+      if (!typing && ev.key === ' ') {
+        ev.preventDefault();
+        svg.classList.toggle('space', (spaceDown = true));
+      }
+      if (ev.key === 'Escape') $('gallery').hidden = true;
+      const mod = ev.metaKey || ev.ctrlKey;
+      if (mod && ev.key === 'f') {
+        ev.preventDefault();
+        $('search').focus();
+        $('search').select();
+      } else if (!typing && mod && ev.key === 'z' && undo.length) {
+        ev.preventDefault();
+        const target = JSON.parse(undo.pop());
+        const patch = diffDocs(doc, target);
+        doc = target;
+        send(patch);
+        render();
+      } else if (!typing && (ev.key === '[' || ev.key === ']') && selected.size) {
+        // Send to back / bring to front.
+        const zs = doc.elements.map((e) => e.z ?? 0);
+        const z = ev.key === ']' ? Math.max(...zs) + 1 : Math.min(...zs) - 1;
+        for (const id of selected) el(id).z = z;
+        commit();
+        render();
+      } else if (!typing && ev.key === 'Escape' && selected.size) {
+        selected.clear();
+        selectionChanged();
+        render();
+      }
+    });
+
+    // ---- export: the same SVG the agent's export makes ----
+
+    // PNG comes from the server, drawn from this same SVG, exactly like the agent's export.
+    const toPng = async (svgText) => (await fetch('/api/png', { method: 'POST', body: JSON.stringify({ svg: svgText }) })).blob();
+
+    const fileName = () => slugify(doc?.title || current, new Set());
+    // Every file exported from this tab, newest first, so the queue can show it and download it again
+    // (videos are listed there from the server's queue instead).
+    const exported = [];
+    function download(name, data, type, again = false) {
+      const blob = data instanceof Blob ? data : new Blob([data], { type });
+      if (!again && !name.endsWith('.mp4')) {
+        exported.unshift({ name, blob, at: new Date() });
+        queueUi();
+      }
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    // JSON in a dialog: copy it out of one Giotto, paste it into another's Import (the + by the logo).
+    function jsonDialog(text) {
+      const importing = text === undefined;
+      $('json-title').textContent = importing ? 'Import a diagram' : `${doc.title || current} as JSON`;
+      $('json-text').value = importing ? '' : JSON.stringify(JSON.parse(text), null, 2);
+      $('json-text').readOnly = !importing;
+      $('json-text').placeholder = importing ? 'Paste a diagram\'s JSON (Export → JSON in any Giotto)' : '';
+      $('json-status').textContent = '';
+      $('json-copy').hidden = importing;
+      $('json-import').hidden = !importing;
+      $('json-dlg').showModal();
+      importing ? $('json-text').focus() : ($('json-text').select(), ($('json-text').scrollTop = 0));
+    }
+    $('json-copy').onclick = async () => {
+      await navigator.clipboard.writeText($('json-text').value).catch(() => $('json-text').select());
+      $('json-status').textContent = 'Copied.';
+    };
+    $('import-btn').onclick = () => jsonDialog();
+    $('json-import').onclick = async () => {
+      let parsed;
+      try { parsed = JSON.parse($('json-text').value); } catch (e) { return void ($('json-status').textContent = `Not valid JSON: ${e.message}`); }
+      const res = await fetch('/api/doc', { method: 'POST', body: JSON.stringify(parsed) });
+      const out = await res.json();
+      if (!res.ok) return void ($('json-status').textContent = out.error);
+      $('json-dlg').close();
+      await refreshList();
+      await open(out.id);
+    };
+
+    // ---- scenes: play a diagram's stories (tabs, play/pause, 1x/2x) ----
+
+    const player = { on: false, playing: false, scene: 0, t: 0, speed: 1, tl: null, last: 0 };
+
+    // The header and footer a style adds to exports, shown on the canvas when ticked (remembered per browser).
+    let showFrame = (() => { try { return localStorage.getItem('giotto-frame') === '1'; } catch { return false; } })();
+    const hasFrame = (st) => !!(st.header?.show || st.footer?.show);
+
+    function sceneBar() {
+      const scenes = doc?.html === undefined ? doc?.scenes || [] : [];
+      const framed = !!doc && doc.html === undefined && hasFrame(S);
+      $('scenes').hidden = !scenes.length && !framed;
+      if (!scenes.length) stopPlayer(true);
+      player.tl = scenes.length ? timeline(doc) : null;
+      if (player.scene >= scenes.length) player.scene = 0;
+      const key = JSON.stringify([scenes.map((s) => s.label), player.on, player.playing, player.speed, player.scene, framed, showFrame]);
+      if ($('scenes').dataset.key === key) return;
+      $('scenes').dataset.key = key;
+      const tabs = scenes.map((sc, i) => {
+        const b = document.createElement('button');
+        b.className = 'tab' + (player.on && i === player.scene ? ' on' : '');
+        b.innerHTML = '<span></span><i class="bar"></i>';
+        b.firstChild.textContent = sc.label || `Scene ${i + 1}`;
+        b.onclick = () => startPlayer(i);
+        return b;
+      });
+      const btn = (text, title, fn) => {
+        const b = document.createElement('button');
+        b.className = 'btn';
+        b.textContent = text;
+        b.title = title;
+        b.onclick = fn;
+        return b;
+      };
+      const grow = document.createElement('span');
+      grow.className = 'grow';
+      const controls = [];
+      if (framed) {
+        const label = Object.assign(document.createElement('label'), { className: 'check', title: 'Show the header and footer your style adds to exports' });
+        const box = Object.assign(document.createElement('input'), { type: 'checkbox', checked: showFrame });
+        box.onchange = () => {
+          showFrame = box.checked;
+          try { localStorage.setItem('giotto-frame', showFrame ? '1' : '0'); } catch {}
+          sceneBar();
+          fit();
+          render();
+        };
+        label.append(box, 'Header & footer');
+        controls.push(label);
+      }
+      if (scenes.length) {
+        // Steps: each beat's final state, one at a time (paused), across scenes.
+        const steps = Object.assign(document.createElement('span'), { className: 'steps' });
+        const arrow = (text, title, dir) => Object.assign(document.createElement('button'), { textContent: text, title, onclick: () => step(dir) });
+        steps.append(arrow('‹', 'Previous step', -1), Object.assign(document.createElement('span'), { id: 'step-count' }), arrow('›', 'Next step: how it looks once it lands', 1));
+        controls.push(steps,
+          btn(player.playing ? '❚❚' : '▶', player.playing ? 'Pause' : 'Play', () => (player.playing ? pausePlayer() : startPlayer(player.scene, !player.on))),
+          btn(`${player.speed}×`, 'Speed', () => { player.speed = player.speed === 1 ? 2 : 1; sceneBar(); }),
+          ...(player.on ? [btn('✕', 'Back to the still diagram', () => stopPlayer())] : []));
+      }
+      $('scenes').replaceChildren(...tabs, grow, ...controls);
+      stepCount();
+    }
+
+    // Which step (beat) the player is on, and its narration as a tooltip.
+    function stepCount() {
+      const el = $('step-count'), sc = player.tl?.scenes[player.scene];
+      if (!el || !sc) return;
+      const i = player.on ? Math.max(0, sc.beats.findLastIndex((b) => b.start <= player.t)) : -1;
+      const text = player.on ? `${i + 1} / ${sc.beats.length}` : `– / ${sc.beats.length}`;
+      if (el.textContent !== text) (el.textContent = text), (el.parentElement.title = player.on ? sc.beats[i]?.say || '' : 'Step through each beat\'s final state');
+    }
+    // One beat back or forward, shown as it ends (everything it changes has landed), paused.
+    function step(dir) {
+      const scenes = player.tl.scenes;
+      let si = player.scene, bi = player.on ? Math.max(0, scenes[si].beats.findLastIndex((b) => b.start <= player.t)) + dir : dir > 0 ? 0 : scenes[si].beats.length - 1;
+      for (let guard = 0; (bi < 0 || bi >= scenes[si].beats.length) && guard < scenes.length + 1; guard++) {
+        si = (si + (bi < 0 ? -1 : 1) + scenes.length) % scenes.length;
+        bi = bi < 0 ? scenes[si].beats.length - 1 : 0;
+      }
+      const b = scenes[si].beats[bi];
+      if (!b) return;
+      Object.assign(player, { on: true, playing: false, scene: si, t: b.end - 1 });
+      sceneBar();
+      render();
+    }
+
+    function startPlayer(scene, fromStart = true) {
+      if (scene !== player.scene || fromStart) player.t = 0;
+      Object.assign(player, { on: true, playing: true, scene, last: performance.now() });
+      sceneBar();
+      requestAnimationFrame(tick);
+    }
+    function pausePlayer() {
+      player.playing = false;
+      sceneBar();
+    }
+    function stopPlayer(quiet) {
+      const was = player.on;
+      Object.assign(player, { on: false, playing: false, t: 0 });
+      if (quiet) return was && render();
+      if (!$('scenes').hidden) sceneBar();
+      render();
+    }
+    function tick(now) {
+      if (!player.playing) return;
+      player.t += (now - player.last) * player.speed;
+      player.last = now;
+      const sc = player.tl?.scenes[player.scene];
+      if (!sc) return stopPlayer();
+      if (player.t >= sc.duration) {
+        // Next scene, looping like the exports.
+        player.scene = (player.scene + 1) % player.tl.scenes.length;
+        player.t = 0;
+        sceneBar();
+      }
+      render();
+      requestAnimationFrame(tick);
+    }
+
+    // ---- export: one dialog, a tab per format, each previewed as the file it will download ----
+
+    const xp = { format: 'svg', theme: 'light', scene: 'all', speed: '1', aspect: 'original', res: '1080', fps: '24', token: 0, url: null, file: null, lastJob: null };
+    const formatsOf = () => (doc.html !== undefined
+      ? [['png', 'PNG', 'The image, drawn by Chrome'], ['html', 'HTML', 'One file, opens in any browser'], ['json', 'JSON', 'Move it to another Giotto']]
+      : [['svg', 'SVG', doc.scenes?.length ? 'Animated, plays on GitHub' : 'Sharp at any size'], ['png', 'PNG', 'A picture for chats and slides'],
+        ...(doc.scenes?.length ? [['mp4', 'Video', 'MP4, for X, talks and posts']] : []), ['json', 'JSON', 'Move it to another Giotto']]);
+    const kb = (n) => (n < 1048576 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1048576).toFixed(1)} MB`);
+    const svgSize = (svg) => ['width', 'height'].map((k) => +new RegExp(`\\b${k}="([\\d.]+)"`).exec(svg.slice(0, svg.indexOf('>')))?.[1]);
+    const xOpts = () => ({ scene: xp.scene === 'all' ? undefined : +xp.scene, speed: +xp.speed, dark: xp.theme === 'dark' });
+    const xName = () => `${fileName()}${xp.scene === 'all' ? '' : `-scene${xp.scene}`}${xp.speed === '1' ? '' : `-${xp.speed}x`}${xp.aspect === 'original' ? '' : `-${xp.aspect.replace(':', 'x')}`}`;
+    const failed = async (res) => { if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || res.statusText); return res; };
+    const ASPECT = { '16:9': 16 / 9, '1:1': 1, '9:16': 9 / 16 };
+    // The frame of an animated export: the chosen shape (or the diagram's own), its short side at the chosen size, in even pixels.
+    const frameSize = (w, h) => {
+      const a = ASPECT[xp.aspect] || w / h, short = +xp.res, even = (n) => Math.round(n / 2) * 2;
+      return a >= 1 ? { width: even(short * a), height: short } : { width: short, height: even(short / a) };
+    };
+    // A guess at the video's file size, from earlier renders (diagrams are mostly still, so they compress well).
+    const videoGuess = ({ width, height }, fps, secs) => 45 * 1024 * Math.sqrt((width * height) / 2.3e6) * Math.sqrt(fps / 24) * secs;
+    // The played diagram (scene, speed) and its natural size, before any frame shape.
+    function played(S2) {
+      const d = forExport(doc, xOpts()), tl = timeline(d), stage = usesStage(d);
+      const [w, h] = stage ? [d.view?.width || 1280, d.view?.height || 800] : svgSize(toSvg(d, S2, { frame: frameAt(d, 0, 0, tl), sceneIndex: 0 }));
+      return { d, tl, stage, size: frameSize(w, h) };
+    }
+
+    // Starts from what you see: the canvas's light or dark, and the scene and speed the player is on.
+    function openExport(format) {
+      if (!doc) return;
+      const scenes = doc.scenes || [];
+      Object.assign(xp, { theme: isDark() ? 'dark' : 'light', scene: player.on && scenes.length ? String(player.scene + 1) : 'all', speed: String(player.speed) });
+      if (format) xp.format = format;
+      if (xp.format !== 'queue' && !formatsOf().some(([f]) => f === xp.format)) xp.format = formatsOf()[0][0];
+      $('x-scene').replaceChildren(new Option('All scenes, in order', 'all'), ...scenes.map((sc, i) => new Option(sc.label || `Scene ${i + 1}`, String(i + 1))));
+      $('x-scene').value = xp.scene;
+      $('x-title').textContent = `Export “${doc.title || current}”`;
+      $('export-dlg').showModal();
+      showFormat();
+    }
+    $('export-btn').onclick = () => openExport();
+    $('queue-btn').onclick = () => openExport('queue');
+    $('export-dlg').addEventListener('close', () => (xp.token++, setPreview(null)));
+    document.querySelectorAll('#export-dlg .pick').forEach((p) => p.addEventListener('click', (ev) => {
+      const v = ev.target.closest('button')?.dataset.v;
+      if (v && xp[p.dataset.key] !== v) (xp[p.dataset.key] = v), showFormat();
+    }));
+    $('x-scene').onchange = () => ((xp.scene = $('x-scene').value), showFormat());
+
+    function setPreview(node, info = '', url = null) {
+      if (xp.url) URL.revokeObjectURL(xp.url);
+      xp.url = url;
+      $('x-preview').replaceChildren(...(node ? [node] : []));
+      $('x-info').textContent = info;
+    }
+    const navButton = (id, name, about) => {
+      const b = Object.assign(document.createElement('button'), { type: 'button', className: id === xp.format ? 'on' : '', onclick: () => ((xp.format = id), showFormat()) });
+      b.append(Object.assign(document.createElement('span'), { textContent: name }), Object.assign(document.createElement('small'), { textContent: about }));
+      return b;
+    };
+    function formatNav() {
+      const running = queue.filter((j) => !j.done && !j.error).length, ready = queue.filter((j) => j.done).length;
+      const about = [running && `${running} rendering`, ready + exported.length && `${ready + exported.length} file${ready + exported.length === 1 ? '' : 's'}`].filter(Boolean).join(' · ') || 'Nothing yet';
+      $('x-formats').replaceChildren(...formatsOf().map(([id, name, a]) => navButton(id, name, a)), document.createElement('hr'), navButton('queue', 'Queue', about));
+    }
+
+    async function showFormat() {
+      const f = xp.format, token = ++xp.token, dark = xp.theme === 'dark', S2 = resolveStyle(styles[styleId], dark), scenes = !!doc.scenes?.length;
+      const live = () => token === xp.token && $('export-dlg').open;
+      const animated = scenes && (f === 'svg' || f === 'mp4');
+      formatNav();
+      document.querySelectorAll('#export-dlg .pick').forEach((p) => p.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.v === xp[p.dataset.key])));
+      const show = { theme: f !== 'json' && f !== 'queue', scene: animated, speed: animated, aspect: animated, res: animated, fps: scenes && f === 'mp4' };
+      for (const [k, on] of Object.entries(show)) document.querySelector(`[data-opt="${k}"]`).hidden = !on;
+      $('x-copy').hidden = f !== 'json';
+      $('x-go').hidden = f === 'queue';
+      $('x-share').hidden = f !== 'svg';
+      $('x-share').disabled = true;
+      $('x-go').textContent = f === 'mp4' ? 'Render and download' : 'Download';
+      $('x-go').disabled = true;
+      $('x-status').textContent = '';
+      xp.file = null;
+      renderProgress();
+      if (f === 'queue') return showQueue();
+      setPreview(Object.assign(document.createElement('div'), { className: 'xwait', textContent: 'Drawing the preview…' }));
+      try {
+        if (f === 'json') {
+          const text = JSON.stringify(JSON.parse(base ?? JSON.stringify(doc)), null, 2);
+          xp.file = { blob: new Blob([text], { type: 'application/json' }), name: `${fileName()}.json` };
+          setPreview(Object.assign(document.createElement('textarea'), { value: text, readOnly: true, spellcheck: false }), `${kb(xp.file.blob.size)} · paste it into another Giotto with the + next to the logo`);
+        } else if (f === 'html') {
+          // The page's own file in a sandbox, at its real size, scaled down to fit.
+          const html = pageHtml(doc, styles[styleId], { dark }), { w, total } = pageBox(doc, styles[styleId], dark);
+          const fr = Object.assign(document.createElement('iframe'), { srcdoc: html, title: 'Preview', width: w, height: total });
+          fr.setAttribute('sandbox', '');
+          xp.file = { blob: new Blob([html], { type: 'text/html' }), name: `${fileName()}.html` };
+          setPreview(fr, `${w}×${total} · ${kb(xp.file.blob.size)}`);
+          const box = $('x-preview'), k = Math.min(1, (box.clientWidth - 24) / w, (box.clientHeight - 24) / total);
+          Object.assign(fr.style, { transform: `scale(${k})`, margin: `${(total * (k - 1)) / 2}px ${(w * (k - 1)) / 2}px` });
+        } else if (f === 'mp4') {
+          // Every frame the video will have, drawn by the same code that renders it, at its frame rate and shape.
+          const { d, tl, stage, size } = played(S2), fps = +xp.fps, V = { ...S2, flatShadows: true };
+          const frame = (si, t) => {
+            const svg = toSvg(d, V, { frame: frameAt(d, si, t, tl), sceneIndex: si, view: stage ? size : null, styles });
+            return stage ? svg : fitTo(svg, size, V.background);
+          };
+          const box = Object.assign(document.createElement('div'), { className: 'xvid' });
+          setPreview(box, `${size.width}×${size.height} · ${(tl.total / 1000).toFixed(1)} s · ${fps} fps · about ${kb(videoGuess(size, fps, tl.total / 1000))} · rendered on this computer (needs ffmpeg)`);
+          const start = performance.now(), step = 1000 / fps;
+          let shown = -1;
+          const tick = (now) => {
+            if (!live()) return;
+            const n = Math.floor(((now - start) % tl.total) / step);
+            if (n !== shown) {
+              let t = n * step, si = 0;
+              while (si < tl.scenes.length - 1 && t >= tl.scenes[si].duration) t -= tl.scenes[si++].duration;
+              box.innerHTML = frame(si, t);
+              shown = n;
+            }
+            requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        } else {
+          // SVG and PNG: the file itself, shown as an image (the way a README or a chat shows it).
+          let blob, note = '';
+          if (f === 'png') blob = doc.html !== undefined ? await (await failed(await fetch(`/api/page.png?id=${current}&dark=${dark ? 1 : 0}`))).blob() : await toPng(toSvg(doc, S2));
+          else if (scenes) {
+            blob = await (await failed(await fetch(`/api/animation?id=${current}`, { method: 'POST', body: JSON.stringify({ format: 'animated-svg', ...xOpts(), size: played(S2).size }) }))).blob();
+            note = ' · plays its scenes, on GitHub too';
+          } else blob = new Blob([toSvg(doc, S2)], { type: 'image/svg+xml' });
+          if (!live()) return;
+          const url = URL.createObjectURL(blob), img = new Image();
+          img.src = url;
+          await img.decode().catch(() => {});
+          if (!live()) return URL.revokeObjectURL(url);
+          xp.file = { blob, name: `${f === 'svg' ? xName() : fileName()}.${f}` };
+          setPreview(img, `${img.naturalWidth}×${img.naturalHeight}${f === 'png' ? ' px' : ''} · ${kb(blob.size)}${note}`, url);
+        }
+        if (live()) $('x-go').disabled = $('x-share').disabled = false;
+      } catch (e) {
+        if (live()) setPreview(Object.assign(document.createElement('div'), { className: 'xwait', textContent: `Couldn't draw it: ${e.message}` }));
+      }
+    }
+
+    $('x-copy').onclick = async () => {
+      const text = await xp.file?.blob.text();
+      await navigator.clipboard.writeText(text).then(() => ($('x-status').textContent = 'Copied.'), () => $('x-preview').querySelector('textarea')?.select());
+    };
+    $('x-share').onclick = async () => {
+      const st = $('x-status'), b = $('x-share');
+      b.disabled = true;
+      st.textContent = 'Uploading…';
+      try {
+        const { url } = await (await failed(await fetch('/api/share', { method: 'POST', body: JSON.stringify({ name: xName(), svg: await xp.file.blob.text() }) }))).json();
+        await navigator.clipboard.writeText(url).catch(() => {});
+        st.replaceChildren('Link copied: ', Object.assign(document.createElement('a'), { href: url, target: '_blank', textContent: url }));
+      } catch (e) {
+        st.textContent = `Couldn't share: ${e.message}`;
+      }
+      b.disabled = false;
+    };
+    // Video goes to the export queue: it keeps rendering if the dialog closes (or the page reloads), and downloads when done.
+    $('x-go').onclick = async () => {
+      if (xp.format !== 'mp4') return xp.file && download(xp.file.name, xp.file.blob);
+      const S2 = resolveStyle(styles[styleId], xp.theme === 'dark');
+      const body = JSON.stringify({ format: 'mp4', ...xOpts(), size: played(S2).size, fps: +xp.fps, name: xName() });
+      $('x-go').disabled = true;
+      try {
+        const { job } = await (await failed(await fetch(`/api/animation?id=${current}`, { method: 'POST', body }))).json();
+        mine.add(job);
+        xp.lastJob = job;
+        $('x-status').textContent = 'Added to the queue. It keeps going if you close this.';
+        await pollQueue();
+      } catch (e) {
+        $('x-status').textContent = `Failed: ${e.message}`;
+      } finally {
+        $('x-go').disabled = false;
+      }
+    };
+
+    // ---- the export queue: videos rendering on the server, shown in the header and in the dialog ----
+
+    let queue = [], polling = false;
+    const mine = new Set(), fetched = new Map(); // jobs started in this tab download by themselves when done
+    const jobPct = (j) => Math.round((j.progress || 0) * 100);
+    const jobState = (j) => (j.error ? `Failed: ${j.error}` : j.done ? `Ready · ${kb(j.bytes || 0)}` : j.progress > 0 && j.progress < 1 ? `Rendering · ${jobPct(j)}%` : j.progress >= 1 ? 'Finishing the file…' : 'Getting the frames ready…');
+    const jobAbout = (j) => [j.size && `${j.size.width}×${j.size.height}`, `${j.fps} fps`, `${(j.seconds || 0).toFixed(1)} s`].filter(Boolean).join(' · ');
+    async function jobBlob(j) {
+      if (!fetched.has(j.job)) fetched.set(j.job, (await fetch(`/api/animation/file?job=${j.job}`)).blob());
+      return fetched.get(j.job);
+    }
+    async function pollQueue() {
+      if (polling) return;
+      polling = true;
+      try {
+        for (;;) {
+          queue = await (await fetch('/api/animation/jobs')).json();
+          for (const j of queue) {
+            if (!mine.has(j.job) || !(j.done || j.error)) continue;
+            mine.delete(j.job);
+            if (j.done) {
+              const blob = await jobBlob(j);
+              download(`${j.name}.mp4`, blob);
+              toast(`Video ready: ${j.name}.mp4`);
+              // Still looking at it: the preview becomes the video file itself.
+              if ($('export-dlg').open && xp.format === 'mp4' && xp.lastJob === j.job) {
+                xp.token++;
+                const url = URL.createObjectURL(blob);
+                setPreview(Object.assign(document.createElement('video'), { src: url, controls: true, autoplay: true, loop: true, muted: true, playsInline: true }), `${jobAbout(j)} · ${kb(j.bytes || blob.size)} · the downloaded file`, url);
+              }
+            } else toast(`Video failed: ${j.error}`);
+          }
+          queueUi();
+          if (!queue.some((j) => !j.done && !j.error)) break;
+          await new Promise((r) => setTimeout(r, 600));
+        }
+      } catch {} finally {
+        polling = false;
+      }
+    }
+    function queueUi() {
+      const running = queue.filter((j) => !j.done && !j.error), ready = queue.filter((j) => j.done);
+      $('queue-btn').hidden = !queue.length && !exported.length;
+      $('queue-btn').firstChild.hidden = !running.length;
+      const files = ready.length + exported.length;
+      $('queue-btn').lastChild.textContent = running.length ? `Rendering ${jobPct(running[0])}%${running.length > 1 ? ` (+${running.length - 1})` : ''}` : `${files} export${files === 1 ? '' : 's'}`;
+      if ($('export-dlg').open) {
+        formatNav();
+        renderProgress();
+        if (xp.format === 'queue') showQueue();
+      }
+    }
+    // While this diagram's latest video renders, its progress shows over the video preview.
+    function renderProgress() {
+      const j = xp.format === 'mp4' && queue.find((x) => x.job === xp.lastJob && !x.done && !x.error);
+      $('x-render').hidden = $('x-progress').hidden = !j;
+      if (!j) return;
+      const p = j.progress || 0, secs = (Date.now() - j.started) / 1000, left = p > 0.05 && p < 1 ? Math.round((secs * (1 - p)) / p) : null;
+      $('x-render').lastChild.textContent = jobState(j) + (left != null ? ` · about ${left < 60 ? `${Math.max(1, left)} s` : `${Math.round(left / 60)} min`} left` : '');
+      $('x-progress').classList.toggle('busy', !(p > 0 && p < 1));
+      $('x-progress').firstChild.style.width = p > 0 && p < 1 ? `${jobPct(j)}%` : '';
+    }
+    function showQueue() {
+      const list = Object.assign(document.createElement('div'), { className: 'xqueue' });
+      const button = (text, onclick) => Object.assign(document.createElement('button'), { type: 'button', className: 'btn', textContent: text, onclick });
+      if (!queue.length && !exported.length) list.append(Object.assign(document.createElement('p'), { textContent: 'Nothing exported yet. Videos render here and keep going even if you close this; every file you download shows up here too.' }));
+      if (queue.length) list.append(Object.assign(document.createElement('h4'), { textContent: 'Videos' }));
+      for (const j of queue) {
+        const row = Object.assign(document.createElement('div'), { className: `xjob${j.error ? ' err' : ''}` });
+        const acts = Object.assign(document.createElement('div'), { className: 'acts' });
+        if (j.done) acts.append(button('Download', async () => download(`${j.name}.mp4`, await jobBlob(j))));
+        if (j.done || j.error) acts.append(button('Remove', async () => { await fetch(`/api/animation?job=${j.job}`, { method: 'DELETE' }); fetched.delete(j.job); queue = queue.filter((x) => x !== j); queueUi(); }));
+        row.append(Object.assign(document.createElement('b'), { textContent: `${j.name}.mp4` }), acts, Object.assign(document.createElement('small'), { textContent: `${jobAbout(j)} · ${jobState(j)}` }));
+        if (!j.done && !j.error) {
+          const bar = Object.assign(document.createElement('div'), { className: 'bar' });
+          bar.append(Object.assign(document.createElement('i'), { style: `width:${Math.max(3, jobPct(j))}%` }));
+          row.append(bar);
+        }
+        list.append(row);
+      }
+      if (exported.length) list.append(Object.assign(document.createElement('h4'), { textContent: 'Downloaded from this tab' }));
+      for (const f of exported) {
+        const row = Object.assign(document.createElement('div'), { className: 'xjob' });
+        const acts = Object.assign(document.createElement('div'), { className: 'acts' });
+        acts.append(button('Download again', () => download(f.name, f.blob, null, true)), button('Remove', () => { exported.splice(exported.indexOf(f), 1); queueUi(); }));
+        row.append(Object.assign(document.createElement('b'), { textContent: f.name }), acts, Object.assign(document.createElement('small'), { textContent: `${kb(f.blob.size)} · ${f.at.toLocaleTimeString()}` }));
+        list.append(row);
+      }
+      setPreview(list, queue.length ? 'Videos render on this computer; finished ones stay until you remove them. Other files stay while this tab is open.' : exported.length ? 'Files stay here while this tab is open.' : '');
+    }
+    pollQueue(); // videos still rendering (or ready) from before a reload
+
+    // ---- light / dark ----
+
+    const media = matchMedia('(prefers-color-scheme: dark)');
+    const isDark = () => theme === 'dark' || (theme === 'auto' && media.matches);
+    const THEMES = { auto: ['◐', 'Theme: follows your system'], light: ['☀', 'Theme: light'], dark: ['☾', 'Theme: dark'] };
+    function applyTheme() {
+      document.body.classList.toggle('dark', isDark());
+      $('theme-btn').textContent = THEMES[theme][0];
+      $('theme-btn').title = `${THEMES[theme][1]} (click to change)`;
+      applyStyle(styleId);
+    }
+    $('theme-btn').onclick = () => {
+      theme = { auto: 'light', light: 'dark', dark: 'auto' }[theme];
+      store.set('giotto-theme', theme);
+      applyTheme();
+    };
+    media.addEventListener('change', applyTheme);
+
+    // ---- styles: how every diagram looks; one is active at a time ----
+
+    // A few dots showing a style's colors: background, its tone fills, its lines.
+    function swatches(s) {
+      const box = document.createElement('span');
+      box.className = 'sws';
+      const colors = [s.background, ...Object.values(s.tones).slice(0, 4).map((t) => t.fill), s.stroke];
+      for (const c of colors) {
+        const dot = document.createElement('span');
+        dot.className = 'sw';
+        dot.style.background = c; // set through the DOM, so a style can't inject markup
+        box.append(dot);
+      }
+      return box;
+    }
+
+    function setStyles(text) {
+      stylesText = text;
+      ({ styles, current: styleId } = JSON.parse(text));
+      applyStyle(styleId);
+    }
+
+    function applyStyle(id) {
+      styleId = styles[id] ? id : 'default';
+      S = resolveStyle(styles[styleId], isDark());
+      const name = document.createElement('span');
+      name.textContent = styles[styleId]?.name || styleId; // not the default's name
+      $('style-btn').replaceChildren(swatches(S), name, ' ▾');
+      if (doc) sceneBar(); // the style decides whether there's a header and footer to show
+      render();
+      if (!$('gallery').hidden) showGallery();
+    }
+
+    function showGallery() {
+      const preview = doc?.elements.length ? doc : SAMPLE;
+      const cards = Object.entries(styles).map(([id, st]) => {
+        const s = resolveStyle(st, isDark());
+        const b = document.createElement('button');
+        b.className = id === styleId ? 'on' : '';
+        // Previews are images, so each style's own CSS stays inside its preview.
+        const img = document.createElement('img');
+        img.alt = '';
+        img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(toSvg(preview, s))}`;
+        const row = document.createElement('div');
+        row.className = 'row';
+        const name = document.createElement('strong');
+        name.textContent = st.name || id;
+        row.append(name, swatches(s));
+        const about = document.createElement('small');
+        about.textContent = st.description || '';
+        b.append(img, row, about);
+        b.onclick = () => {
+          applyStyle(id); // instant here; the server tells other tabs
+          fetch('/api/style', { method: 'PUT', body: JSON.stringify({ id }) });
+        };
+        return b;
+      });
+      const tip = document.createElement('p');
+      tip.textContent = 'Want another look? Ask your agent to make a style, or to change one. Any change shows up on every diagram.';
+      $('gallery').replaceChildren(...cards, tip);
+      $('gallery').hidden = false;
+    }
+
+    $('style-btn').onclick = (ev) => {
+      ev.stopPropagation();
+      $('gallery').hidden ? showGallery() : ($('gallery').hidden = true);
+    };
+    document.addEventListener('pointerdown', (ev) => {
+      if (!ev.target.closest('#gallery, #style-btn')) $('gallery').hidden = true;
+    });
+
+    // ---- start, then stay in sync: live pushes, plus a check every few seconds in case one is missed ----
+
+    setStyles(await (await fetch('/api/styles')).text());
+    applyTheme();
+    await refreshList();
+    const wanted = location.hash.slice(1);
+    await open(diagrams.some((d) => d.id === wanted) ? wanted : diagrams[0]?.id);
+
+    // Links the agent hands out (…/#<id>) open that diagram even in a tab that's already open.
+    addEventListener('hashchange', () => open(location.hash.slice(1)));
+
+    async function check() {
+      try {
+        await refreshList();
+        // The open diagram was deleted (here, in another tab, or its file removed): go to the next one.
+        if (current && !diagrams.some((d) => d.id === current)) {
+          if (!diagrams.length) return location.reload(); // nothing left: start empty
+          current = null;
+        }
+        if (!current && diagrams.length) await open(diagrams[0].id);
+        if (current && !drag) {
+          const res = await fetch(`/api/doc?id=${current}`);
+          if (res.ok) show(await res.text());
+        }
+        const st = await (await fetch('/api/styles')).text();
+        if (st !== stylesText) setStyles(st);
+      } catch {
+        status('canvas server stopped, retrying…');
+      }
+    }
+    setInterval(check, 3000);
+
+    const events = new EventSource(`/api/events?v=${version}`);
+    events.onmessage = async (ev) => {
+      const msg = JSON.parse(ev.data);
+      if (msg.type === 'hello' && msg.version !== version) location.reload(); // Giotto was updated
+      if (msg.type === 'styles' || msg.type === 'deleted') check();
+      if (msg.type === 'doc') {
+        if (msg.id === current) show(msg.text);
+        // The agent is working on another diagram: follow it, unless the user is busy here.
+        else if (Date.now() - lastInput > 5000) await open(msg.id);
+        refreshList();
+      }
+    };
+  </script>
+</body>
+</html>
