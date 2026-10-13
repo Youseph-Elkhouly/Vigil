@@ -277,3 +277,5 @@ giotto-player { --fig-bg: var(--soft); --fig-fg: var(--ink); --fig-muted: var(--
 .more-details .view-tabs { margin: 16px 0 24px; }
 .more-details .session-technical { margin-top: 20px; }
 @media (max-width: 480px) { .issue-row { align-items: flex-start; flex-direction: column; gap: 8px; } }
+
+.demo-note { margin: 0 0 28px; color: var(--secondary); font-size: 13px; }

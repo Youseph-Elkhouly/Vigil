@@ -1,10 +1,19 @@
 import type { CoverageItem, Session, VigilEvent } from "../shared/types";
 
 export function sessionStatus(status: Session["status"]): string {
-  return { starting: "Starting", running: "Working", ended: "Done", failed: "Stopped", simulated: "Example" }[status];
+  return { starting: "Starting", running: "Running", ended: "Completed", failed: "Stopped", simulated: "Demo" }[status];
+}
+
+function demoCopy(event: VigilEvent): { title: string; description: string } | null {
+  if (!event.simulated || !event.input || typeof event.input !== "object" || !("demo" in event.input)) return null;
+  const demo = event.input.demo;
+  if (!demo || typeof demo !== "object" || !("title" in demo) || !("description" in demo)) return null;
+  return typeof demo.title === "string" && typeof demo.description === "string" ? { title: demo.title, description: demo.description } : null;
 }
 
 export function activityTitle(event: VigilEvent): string {
+  const demo = demoCopy(event);
+  if (demo) return demo.title;
   if (event.eventType === "session_start") return "Agent session started";
   if (event.eventType === "session_end") return "Agent session ended";
   if (event.decision === "denied") return event.ruleId === "VIGIL-CODEX-PATH-001" ? "Vigil blocked a protected-file read" : "Vigil blocked an action";
@@ -15,6 +24,8 @@ export function activityTitle(event: VigilEvent): string {
 }
 
 export function activityExplanation(event: VigilEvent): string {
+  const demo = demoCopy(event);
+  if (demo) return demo.description;
   if (event.decision === "denied") return event.ruleId === "VIGIL-CODEX-PATH-001" ? "The request matched a protected-file rule and was denied before execution." : "The request was denied before execution. See the reported reason in the details.";
   if (event.decision === "error") return "Review the details to understand what went wrong.";
   if (event.eventType === "session_start") return "Vigil began recording this session’s activity.";
@@ -26,6 +37,7 @@ export function activityExplanation(event: VigilEvent): string {
 export function checkCopy(item: CoverageItem): { name: string; status: string; description: string } {
   const kind = item.id.split(":").at(-1);
   const statuses = { active: "Results available", checking: "Checking…", failed: "Could not check", not_installed: "Tool not installed", not_configured: "Setup needed", unsupported: "Not available" };
+  if (item.id.startsWith("demo-") && item.version === "Demo") return { name: item.name, status: item.status === "active" ? "Demo result" : statuses[item.status], description: item.summary };
   if (kind === "protected-read") return { name: "Protected-file reads", status: item.status === "active" ? "Rule enabled" : statuses[item.status], description: "Vigil blocks supported direct commands that try to read protected files. This rule does not cover every way to read a file." };
   if (kind === "bash-gap") return { name: "Scripts and indirect file access", status: statuses[item.status], description: "This rule does not block reads through scripts, dynamically built commands, or child processes." };
   if (kind === "mcp-gap") return { name: "Connected tools", status: statuses[item.status], description: "File access through connected tools is not blocked by Vigil’s protected-file rule." };

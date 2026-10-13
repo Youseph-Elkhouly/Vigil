@@ -24,3 +24,29 @@ test("all-session overview interleaves events and filters every section by the s
   assert.deepEqual(state.events.map((item) => item.id), ["event-a", "event-b"]);
   assert.notEqual(sessionCode("codex-session-0001"), sessionCode("codex-session-0002"));
 });
+
+test("board keeps each session in one column and prioritizes unresolved security findings", async () => {
+  const { sessionColumn } = await import("../src/ui/dashboard.js");
+  const { demoState } = await import("../src/demo.js");
+  const demo = demoState(), session = demo.sessions[0]!, issue = demo.findings[0]!;
+  assert.equal(demo.sessions.length, 1);
+  assert.equal(sessionColumn(session, []), "Running");
+  assert.equal(sessionColumn({ ...session, status: "ended" }, []), "Completed");
+  assert.equal(sessionColumn({ ...session, status: "failed" }, []), "Completed");
+  assert.equal(sessionColumn(session, [issue]), "Vulnerable");
+  assert.equal(sessionColumn({ ...session, status: "ended" }, [issue]), "Vulnerable");
+  assert.equal(sessionColumn(session, [{ ...issue, status: "acknowledged" }]), "Vulnerable");
+  assert.equal(sessionColumn(session, [{ ...issue, status: "resolved" }]), "Running");
+  assert.equal(sessionColumn(session, [{ ...issue, severity: "info" }]), "Running");
+  assert.equal(sessionColumn(session, [{ ...issue, sessionId: "another-session" }]), "Running");
+  assert.ok(demo.events.every(event => event.sessionId === session.id && event.simulated));
+  assert.ok(demo.findings.every(finding => finding.sessionId === session.id && finding.simulated));
+});
+
+test("friendly demo wording is used only for simulated events", async () => {
+  const { demoState } = await import("../src/demo.js");
+  const { activityTitle } = await import("../src/ui/labels.js");
+  const event = demoState().events[1]!;
+  assert.equal(activityTitle(event), "Opened the website draft");
+  assert.equal(activityTitle({ ...event, simulated: false, decision: "denied" }), "Vigil blocked an action");
+});

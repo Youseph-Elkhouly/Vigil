@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test test/**/*.test.ts",
     "vigil": "tsx src/cli.ts",
-    "test:security-map:browser": "tsx scripts/security-map-smoke.ts"
+    "test:security-map:browser": "tsx scripts/security-map-smoke.ts",
+    "fixture": "tsx src/fixture.ts"
   },
   "dependencies": {
     "giotto": "file:vendor/giotto",

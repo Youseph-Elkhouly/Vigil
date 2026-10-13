@@ -44,6 +44,19 @@ Vigil stores its database, generated hook profile copy, and default policy under
 
 Run multiple `vigil run` commands in separate terminals to monitor multiple sessions. If the dashboard port is occupied, the next session uses an available port. Dashboards sharing the same `VIGIL_HOME` show each other's live session updates.
 
+## Preview one demo session
+
+```bash
+npm run build
+npm run fixture
+```
+
+Open `http://127.0.0.1:4317`. The board has **Running**, **Completed**, and **Vulnerable** columns. Sessions with an unresolved security finding appear under Vulnerable, even if the task has finished. Other ended or stopped sessions appear under Completed; their badges retain the actual status.
+
+The demo contains exactly one fictional task: **Update the café website**. It appears under Vulnerable because a password was found in the website draft. Open the card, then select **What to do** to see the issue and next step. **More details** contains security checks and the visual explanation.
+
+The card is labelled Demo. No agent is launched and no project files are read or changed. Each launch uses a fresh temporary database, separate from your real sessions. Press Ctrl+C to stop.
+
 ## Scanner behavior
 
 - **Gitleaks:** if installed, Vigil runs `gitleaks dir <project> --report-format json --report-path <temporary-file> --redact --no-banner`. The report lives in an OS temporary directory, is removed after import, and secret/match values are never retained. Exit status, malformed output, and timeouts are shown as failed rather than clean.

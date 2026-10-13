@@ -7,7 +7,7 @@ import type {
   Severity,
   VigilEvent,
 } from "../shared/types";
-import { dashboardScope } from "./dashboard";
+import { dashboardScope, sessionColumn, type SessionColumn } from "./dashboard";
 import { activityTitle, activityExplanation, checkCopy, sessionStatus } from "./labels";
 import type { EvidenceLink } from "../shared/giotto";
 import { SecurityMapView } from "./SecurityMap";
@@ -63,16 +63,12 @@ function Empty({ children }: { children: ReactNode }) {
 }
 
 function SessionBoard({ state, onSelect }: { state: DashboardState; onSelect: (id: string) => void }) {
-  const columns: { title: string; statuses: Session["status"][] }[] = [
-    { title: "Working", statuses: ["starting", "running", "simulated"] },
-    { title: "Done", statuses: ["ended"] },
-    { title: "Stopped", statuses: ["failed"] },
-  ];
+  const columns: SessionColumn[] = ["Running", "Completed", "Vulnerable"];
   if (!state.sessions.length) return <Empty>No sessions yet. Start a monitored agent session to see it here.</Empty>;
   return (
     <div className="session-board">
-      {columns.map(({ title, statuses }) => {
-        const sessions = state.sessions.filter((session) => statuses.includes(session.status))
+      {columns.map((title) => {
+        const sessions = state.sessions.filter((session) => sessionColumn(session, state.findings) === title)
           .sort((a, b) => b.startedAt.localeCompare(a.startedAt));
         return (
           <section className="board-column" key={title} aria-labelledby={`column-${title.replaceAll(" ", "-")}`}>
@@ -80,10 +76,10 @@ function SessionBoard({ state, onSelect }: { state: DashboardState; onSelect: (i
             <div className="board-column__cards">
               {!sessions.length && <p className="board-empty">No {title.toLowerCase()} sessions</p>}
               {sessions.map((session) => {
-                const openFindings = state.findings.filter((finding) => finding.sessionId === session.id && finding.status === "open").length;
+                const openFindings = state.findings.filter((finding) => finding.sessionId === session.id && finding.status !== "resolved" && finding.severity !== "info").length;
                 return (
                   <button type="button" className="session-card" key={session.id} id={`session-card-${session.id}`} onClick={() => onSelect(session.id)} aria-label={`Open ${session.projectName || "Unnamed project"} session started ${exactTime(session.startedAt)}`}>
-                    <span className="session-card__top"><span className={`badge badge--${session.status}`}>{sessionStatus(session.status)}</span></span>
+                    <span className="session-card__top"><span className={`badge badge--${session.status}`}>{sessionStatus(session.status)}</span>{session.simulated && <span className="simulated">Demo</span>}</span>
                     <strong className="session-card__name">{session.projectName || "Unnamed project"}</strong>
                     <span className="session-card__summary">{openFindings ? `${openFindings} ${openFindings === 1 ? "thing" : "things"} to review` : "Nothing to review"}</span>
                     <span className="session-card__bottom"><span>Open session</span><span aria-hidden="true">→</span></span>
@@ -191,7 +187,7 @@ function Findings({ findings, sessions, onSelect, onShowEvent, onExplain }: { fi
     <section className="panel findings-panel" aria-labelledby="findings-title">
       <div className="panel-heading">
         <div><h2 id="findings-title">Needs attention</h2></div>
-        <span className="count count--alert">{findings.filter((item) => item.status === "open").length} open</span>
+        <span className="count count--alert">{findings.filter((item) => item.status !== "resolved" && item.severity !== "info").length} open</span>
       </div>
       <div className={`findings-layout ${selected ? "findings-layout--detail" : ""}`}>
         <div className="issue-list">
@@ -338,18 +334,8 @@ export function App() {
     }
   }, [selectedSessionId, state.sessions, loading]);
 
-  const liveState: DashboardState = useMemo(() => {
-    const sessions = state.sessions.filter(session => !session.simulated);
-    const sessionIds = new Set(sessions.map(session => session.id));
-    return {
-      sessions,
-      events: state.events.filter(event => !event.simulated && sessionIds.has(event.sessionId)),
-      findings: state.findings.filter(finding => !finding.simulated && (!finding.sessionId || sessionIds.has(finding.sessionId))),
-      coverage: state.coverage.filter(item => !item.sessionId || sessionIds.has(item.sessionId)),
-    };
-  }, [state]);
-  const selectedSession = liveState.sessions.find((session) => session.id === selectedSessionId);
-  const scope = dashboardScope(liveState, selectedSessionId);
+  const selectedSession = state.sessions.find((session) => session.id === selectedSessionId);
+  const scope = dashboardScope(state, selectedSessionId);
   return (
     <div className="app-shell">
       <main id="main">
@@ -361,19 +347,20 @@ export function App() {
               <div><h1 id="session-title" tabIndex={-1}>{selectedSession.projectName || "Unnamed project"}</h1></div>
               <span className={`badge badge--${selectedSession.status}`}>{sessionStatus(selectedSession.status)}</span>
             </div>
+            {selectedSession.simulated && <p className="demo-note">Demo session. The activity and issue below are fictional; no real files were changed.</p>}
             <div className="session-detail-grid">
               {view === "map" ? <SecurityMapView session={selectedSession} revision={JSON.stringify([scope.events.map(e => e.id), scope.findings])} findingId={explainFindingId} onCloseExplanation={() => setExplainFindingId(null)}
-                onFinding={(finding,onClose) => <FindingDetail finding={finding} sessions={liveState.sessions} onClose={onClose} onShowEvent={showRelatedEvent} onExplain={explainFinding} />}
+                onFinding={(finding,onClose) => <FindingDetail finding={finding} sessions={state.sessions} onClose={onClose} onShowEvent={showRelatedEvent} onExplain={explainFinding} />}
                 onEvent={(event, link) => <EventDetail event={event} link={link} />}
-              /> : <Timeline events={scope.events} sessions={liveState.sessions} onSelect={setSelectedSessionId} />}
-              <Findings key={selectedSession.id} findings={scope.findings} sessions={liveState.sessions} onSelect={setSelectedSessionId} onShowEvent={showRelatedEvent} onExplain={explainFinding} />
+              /> : <Timeline events={scope.events} sessions={state.sessions} onSelect={setSelectedSessionId} />}
+              <Findings key={selectedSession.id} findings={scope.findings} sessions={state.sessions} onSelect={setSelectedSessionId} onShowEvent={showRelatedEvent} onExplain={explainFinding} />
               <details className="more-details" open={view === "map" ? true : undefined}>
                 <summary>More details</summary>
                 <nav className="view-tabs" aria-label="Session views">
                   <button type="button" className="text-button" aria-pressed={view === "dashboard"} onClick={() => setView("dashboard")}>Activity</button>
                   <button type="button" className="text-button" aria-pressed={view === "map"} onClick={() => { setView("map"); setExplainFindingId(null); }}>Visual explanation</button>
                 </nav>
-                <Coverage items={scope.coverage} sessions={liveState.sessions} onSelect={setSelectedSessionId} />
+                <Coverage items={scope.coverage} sessions={state.sessions} onSelect={setSelectedSessionId} />
                 <details className="technical-details session-technical">
                   <summary>Technical details</summary>
                   <p>Project: {selectedSession.projectPath}</p><p>Agent: {selectedSession.agent}</p><p>Session ID: <code>{selectedSession.id}</code></p>
@@ -384,8 +371,8 @@ export function App() {
           </>
         ) : (
           <>
-            <div className="board-heading"><div><h1 id="sessions-title" tabIndex={-1}>Sessions</h1><p className="board-intro">Pick a task to see how it’s going.</p></div><span className="count">{liveState.sessions.length}</span></div>
-            {loading ? <div className="loading" role="status"><span className="spinner" />Loading sessions…</div> : <SessionBoard state={liveState} onSelect={setSelectedSessionId} />}
+            <div className="board-heading"><div><h1 id="sessions-title" tabIndex={-1}>Sessions</h1><p className="board-intro">Pick a task to see how it’s going.</p></div><span className="count">{state.sessions.length}</span></div>
+            {loading ? <div className="loading" role="status"><span className="spinner" />Loading sessions…</div> : <SessionBoard state={state} onSelect={setSelectedSessionId} />}
           </>
         )}
       </main>
