@@ -11,6 +11,8 @@ import { dashboardScope, sessionColumn, type SessionColumn } from "./dashboard";
 import { activityTitle, activityExplanation, checkCopy, sessionStatus } from "./labels";
 import type { EvidenceLink } from "../shared/giotto";
 import { SecurityMapView } from "./SecurityMap";
+import { VulnerabilityPanel } from "./VulnerabilityPanel";
+import { ToolPicker } from "./ToolPicker";
 
 const EMPTY_STATE: DashboardState = { sessions: [], events: [], findings: [], coverage: [] };
 
@@ -278,6 +280,8 @@ export function App() {
     setView("dashboard");
     if (finding.sessionId) setSelectedSessionId(finding.sessionId);
     requestAnimationFrame(() => requestAnimationFrame(() => {
+      const records = document.querySelector<HTMLDetailsElement>(".session-records");
+      if (records) records.open = true;
       const event = document.getElementById(`event-${finding.eventId}`);
       event?.focus({ preventScroll: true });
       event?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "center" });
@@ -338,7 +342,7 @@ export function App() {
   const scope = dashboardScope(state, selectedSessionId);
   return (
     <div className="app-shell">
-      <main id="main">
+      <main id="main" className={selectedSession ? "session-main" : undefined}>
         {loadError && <div className="error-banner" role="alert"><strong>Sessions could not be loaded.</strong> {loadError}. Waiting for live updates.</div>}
         {selectedSession ? (
           <>
@@ -347,27 +351,28 @@ export function App() {
               <div><h1 id="session-title" tabIndex={-1}>{selectedSession.projectName || "Unnamed project"}</h1></div>
               <span className={`badge badge--${selectedSession.status}`}>{sessionStatus(selectedSession.status)}</span>
             </div>
-            {selectedSession.simulated && <p className="demo-note">Demo session. The activity and issue below are fictional; no real files were changed.</p>}
-            <div className="session-detail-grid">
-              {view === "map" ? <SecurityMapView session={selectedSession} revision={JSON.stringify([scope.events.map(e => e.id), scope.findings])} findingId={explainFindingId} onCloseExplanation={() => setExplainFindingId(null)}
-                onFinding={(finding,onClose) => <FindingDetail finding={finding} sessions={state.sessions} onClose={onClose} onShowEvent={showRelatedEvent} onExplain={explainFinding} />}
-                onEvent={(event, link) => <EventDetail event={event} link={link} />}
-              /> : <Timeline events={scope.events} sessions={state.sessions} onSelect={setSelectedSessionId} />}
-              <Findings key={selectedSession.id} findings={scope.findings} sessions={state.sessions} onSelect={setSelectedSessionId} onShowEvent={showRelatedEvent} onExplain={explainFinding} />
-              <details className="more-details" open={view === "map" ? true : undefined}>
-                <summary>More details</summary>
-                <nav className="view-tabs" aria-label="Session views">
-                  <button type="button" className="text-button" aria-pressed={view === "dashboard"} onClick={() => setView("dashboard")}>Activity</button>
-                  <button type="button" className="text-button" aria-pressed={view === "map"} onClick={() => { setView("map"); setExplainFindingId(null); }}>Visual explanation</button>
-                </nav>
+            <div className="vulnerability-workspace">
+              <VulnerabilityPanel key={selectedSession.id} session={selectedSession} findings={scope.findings} focusedId={explainFindingId} onFocus={setExplainFindingId} onShowEvent={showRelatedEvent} />
+              <div className="workspace-map">
+                <SecurityMapView session={selectedSession} revision={JSON.stringify([scope.events.map(e => e.id), scope.findings])} findingId={explainFindingId} onCloseExplanation={() => setExplainFindingId(null)}
+                  onFinding={(finding,onClose) => <FindingDetail finding={finding} sessions={state.sessions} onClose={onClose} onShowEvent={showRelatedEvent} onExplain={explainFinding} />}
+                  onEvent={(event, link) => <EventDetail event={event} link={link} />}
+                />
+              </div>
+            </div>
+            <ToolPicker key={`tools-${selectedSession.id}`} session={selectedSession} coverage={scope.coverage} />
+            <details className="more-details session-records" open={view === "dashboard" ? undefined : false}>
+              <summary>Activity and security checks</summary>
+              <div className="session-detail-grid">
+                <Timeline events={scope.events} sessions={state.sessions} onSelect={setSelectedSessionId} />
                 <Coverage items={scope.coverage} sessions={state.sessions} onSelect={setSelectedSessionId} />
                 <details className="technical-details session-technical">
                   <summary>Technical details</summary>
                   <p>Project: {selectedSession.projectPath}</p><p>Agent: {selectedSession.agent}</p><p>Session ID: <code>{selectedSession.id}</code></p>
                   <p>Started {exactTime(selectedSession.startedAt)}{selectedSession.endedAt ? ` · Ended ${exactTime(selectedSession.endedAt)}` : ""}</p>
                 </details>
-              </details>
-            </div>
+              </div>
+            </details>
           </>
         ) : (
           <>

@@ -279,3 +279,68 @@ giotto-player { --fig-bg: var(--soft); --fig-fg: var(--ink); --fig-muted: var(--
 @media (max-width: 480px) { .issue-row { align-items: flex-start; flex-direction: column; gap: 8px; } }
 
 .demo-note { margin: 0 0 28px; color: var(--secondary); font-size: 13px; }
+
+/* Vulnerability review: equal space for the explanation and its map. */
+.session-main { width: 100%; max-width: none; padding: 36px clamp(20px, 4vw, 72px) 64px; }
+.vulnerability-workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px; min-height: min(680px, calc(100svh - 190px)); align-items: start; }
+.vulnerability-panel { padding: 28px 8px 32px 0; max-width: 640px; }
+.vulnerability-eyebrow { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px; }
+.vulnerability-panel h2 { margin: 0 0 20px; max-width: 560px; font-size: clamp(26px, 3vw, 38px); letter-spacing: -.035em; line-height: 1.18; font-weight: 600; }
+.vulnerability-description { margin: 0; color: var(--secondary); font-size: 16px; line-height: 1.7; max-width: 560px; }
+.affected-resource { display: grid; gap: 8px; padding: 20px 0; margin-top: 16px; }
+.affected-resource span { color: var(--secondary); font-size: 12px; }
+.affected-resource code { color: var(--ink); font-size: 14px; overflow-wrap: anywhere; }
+.next-step { display: flex; align-items: flex-start; gap: 16px; padding: 24px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); margin: 24px 0; }
+.next-step__icon { display: grid; place-items: center; width: 32px; height: 32px; flex-shrink: 0; background: var(--ink); border-radius: 10px; color: #fff; font-size: 18px; }
+.next-step h3 { margin: 0 0 10px; font-size: 15px; font-weight: 600; }
+.next-step p { margin: 0; color: var(--secondary); font-size: 14px; line-height: 1.7; }
+.workspace-demo-note { color: var(--secondary); font-size: 12px; margin: 20px 0; }
+.issue-select { display: grid; gap: 8px; margin-bottom: 24px; color: var(--secondary); font-size: 13px; }
+.issue-select select { min-height: 44px; max-width: 100%; border: 1px solid #b5b5b5; border-radius: 8px; background: var(--surface); padding: 10px; color: var(--ink); font: inherit; }
+.issue-select select:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.workspace-map { min-width: 0; position: sticky; top: 24px; }
+.workspace-map .security-map-panel { min-height: 580px; }
+.workspace-map .panel-heading { align-items: flex-start; padding: 24px; }
+.workspace-map .map-layout { flex-direction: column; }
+.workspace-map .map-canvas { width: 100%; min-height: 360px; max-height: 650px; display: grid; align-content: center; padding: 24px; }
+.workspace-map .map-evidence { width: 100%; max-width: none; border-left: 0; border-top: 1px solid var(--line); max-height: 340px; }
+.workspace-map .map-evidence .finding-detail { border-left: 0; }
+.map-options { flex-shrink: 0; font-size: 12px; }
+.map-options > summary { min-height: 44px; align-content: center; cursor: pointer; }
+.map-options .map-actions { margin-top: 12px; display: grid; }
+.map-options > summary:focus-visible, .map-notice-details > summary:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.map-notice-details { padding: 14px 24px; border-top: 1px solid var(--line); font-size: 12px; color: var(--secondary); }
+.map-notice-details > summary { min-height: 32px; cursor: pointer; align-content: center; }
+.map-notice-details .map-notices { border: 0; padding: 12px 0 0 16px; }
+.workspace-map .map-legend { gap: 12px; font-size: 11px; }
+.workspace-map .map-legend span { border-color: #737373; }
+.workspace-map .map-legend .map-denied { border-color: #171717; }
+.workspace-map .map-legend .map-finding { border-color: #171717; border-left-style: double; }
+.tool-picker { margin-top: 64px; padding-top: 36px; border-top: 1px solid var(--line); }
+.tool-picker__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+.tool-picker__heading h2 { margin: 6px 0 12px; font-size: 28px; letter-spacing: -.03em; font-weight: 600; }
+.tool-picker__heading p:not(.eyebrow) { margin: 0; max-width: 700px; font-size: 14px; color: var(--secondary); line-height: 1.6; }
+.tool-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: start; }
+.tool-card { min-width: 0; padding: 24px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+.tool-card--selected { border-color: var(--ink); }
+.tool-card__top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.tool-card h3 { font-size: 17px; font-weight: 600; letter-spacing: -.02em; margin: 18px 0 10px; }
+.tool-card p { color: var(--secondary); font-size: 13px; line-height: 1.6; margin: 0; }
+.tool-card__footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 24px; font-size: 12px; }
+.tool-card a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--ink); text-underline-offset: 3px; }
+.tool-status { color: var(--secondary); }
+.tool-toggle { display: grid; place-items: center; min-width: 52px; min-height: 44px; cursor: pointer; position: relative; }
+.tool-toggle input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.toggle-track { display: block; pointer-events: none; width: 42px; height: 26px; padding: 3px; background: #737373; border-radius: 99px; }
+.toggle-track::after { content: ""; display: block; width: 20px; height: 20px; background: #fff; border-radius: 50%; transition: transform .15s; }
+.tool-toggle input:checked + .toggle-track { background: var(--ink); }
+.tool-toggle input:checked + .toggle-track::after { transform: translateX(16px); }
+.tool-toggle input:focus-visible + .toggle-track { outline: 3px solid var(--ink); outline-offset: 4px; }
+.tool-setup { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px; }
+.tool-setup strong { display: block; margin-bottom: 8px; }
+.tool-picker__feedback { min-height: 22px; font-size: 12px; color: var(--secondary); }
+.session-records { margin-top: 32px; }
+.session-records > .session-detail-grid { margin-top: 24px; }
+@media (max-width: 1050px) { .vulnerability-workspace { gap: 24px; } .tool-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .vulnerability-eyebrow { align-items: flex-start; flex-direction: column; } }
+@media (max-width: 760px) { .session-main { padding: 24px 16px 40px; } .vulnerability-workspace { grid-template-columns: 1fr; min-height: 0; } .workspace-map { position: static; } .vulnerability-panel { max-width: none; padding: 12px 0; } .tool-picker { margin-top: 40px; } .workspace-map .security-map-panel { min-height: 420px; } .workspace-map .map-canvas { min-height: 260px; } }
+@media (max-width: 480px) { .tool-grid { grid-template-columns: 1fr; } .tool-card, .next-step { padding: 20px; } .tool-picker__heading { flex-direction: column; } }

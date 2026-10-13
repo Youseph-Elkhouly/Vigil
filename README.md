@@ -53,7 +53,7 @@ npm run fixture
 
 Open `http://127.0.0.1:4317`. The board has **Running**, **Completed**, and **Vulnerable** columns. Sessions with an unresolved security finding appear under Vulnerable, even if the task has finished. Other ended or stopped sessions appear under Completed; their badges retain the actual status.
 
-The demo contains exactly one fictional task: **Update the café website**. It appears under Vulnerable because a password was found in the website draft. Open the card, then select **What to do** to see the issue and next step. **More details** contains security checks and the visual explanation.
+The demo contains exactly one fictional task: **Update the café website**. It appears under Vulnerable because a password was found in the website draft. Open the card to see the vulnerability and recommended next step on the left, with its system map on the right. Scroll down to **Choose your tools** to try the demo switches. **Activity and security checks** contains the underlying records.
 
 The card is labelled Demo. No agent is launched and no project files are read or changed. Each launch uses a fresh temporary database, separate from your real sessions. Press Ctrl+C to stop.
 
@@ -101,3 +101,9 @@ The tests cover supported direct Codex reads, pass-through behavior, persistence
 Open a session, expand **More details**, and choose **Visual explanation** for a live view of recorded actions, resource references, decisions and findings. Select a diagram element to inspect its supporting evidence. Finding details include **Explain visually**; maps support JSON/SVG exports. Attempts, returned tools and denials are distinct, and missing telemetry is explicit.
 
 Giotto is vendored at reviewed commit `4c06069944fd0f515e4e7bf89b9cca8398cd7936`; install/build commands remain unchanged. Optional `--giotto-mcp` enables a restricted session-scoped stdio server for separate, inferred architecture diagrams. See [setup, tests and coverage gaps](docs/security-map.md).
+
+## Session review and tools
+
+The session view keeps the vulnerability breakdown and recommended next step beside a map of recorded actions and file references. **Map options → Agent architecture** opens separately inferred, agent-authored diagrams when configured. The two columns stack on small screens.
+
+Below the map, **Choose your tools** includes Claude permissions and sandbox, Snyk Agent Scan, Lasso Claude Hooks, Docker Sandboxes, Superset, Conductor, and Langfuse, with links to their official setup guides. Choices are saved per session in this browser. In the fictional demo, switches simulate activation only. In live sessions, they select tools for setup; they do not install tools, modify permissions, or move a running agent into isolation. Existing scanner coverage is shown as results available, not as verified protection.

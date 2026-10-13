@@ -28,10 +28,17 @@ export function GiottoDiagram({doc, selectableIds, onSelect, stepIndex}: {doc: D
       validateDiagram(doc);
       player=document.createElement("giotto-player") as PlayerElement;
       player.setAttribute("autoplay","false");
+      player.setAttribute("theme","light");
       // Guard the verified draw method, including hover and animation redraws.
       const draw=player.draw.bind(player);
       player.draw=()=>{try {draw();} catch {fail();}};
-      player.figStyle={shadow:false,fontSize:14,maxLabelWidth:240,groupPadding:16};
+      player.figStyle={shadow:false,fontSize:14,maxLabelWidth:240,groupPadding:16,background:"#ffffff",text:"#171717",stroke:"#737373",fill:"#ffffff",arrowColor:"#737373",accent:"#171717",groupFill:"#f5f5f5",groupStroke:"#dedede",tones:{
+        gray:{fill:"#f5f5f5",stroke:"#737373",text:"#171717"},
+        blue:{fill:"#ffffff",stroke:"#737373",text:"#171717"},
+        green:{fill:"#ffffff",stroke:"#171717",text:"#171717"},
+        red:{fill:"#171717",stroke:"#171717",text:"#ffffff"},
+        yellow:{fill:"#ededed",stroke:"#171717",text:"#171717"},
+      }};
       player.doc=doc;
       host.current.replaceChildren(player);
       livePlayer.current=player; showStep(player,doc,stepRef.current);

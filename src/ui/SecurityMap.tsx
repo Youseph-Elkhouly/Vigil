@@ -43,20 +43,20 @@ export function SecurityMapView({session,revision,findingId,onFinding,onEvent,on
   const current=data?.map.steps[step];
   const exportUrl=(format:string)=>`/api/security-map?session=${encodeURIComponent(session!.id)}${findingId?`&finding=${encodeURIComponent(findingId)}`:""}&format=${format}`;
   return <section className="panel security-map-panel" aria-labelledby="security-map-title">
-    <div className="panel-heading"><div><p className="eyebrow">Recorded evidence</p><h2 id="security-map-title">{findingId?"Explain visually":"Security Map"}</h2></div><div className="map-actions">{session&&<button className="text-button" aria-pressed={authored} onClick={()=>setAuthored(!authored)}>{authored?"Recorded security map":"Agent architecture"}</button>}{findingId&&<button className="text-button" onClick={onCloseExplanation}>Live map</button>}{session&&!authored&&<><a className="text-button" href={exportUrl("json")} download>Export JSON</a><a className="text-button" href={exportUrl("svg")} download>Export SVG</a></>}</div></div>
+    <div className="panel-heading"><div><p className="eyebrow">{authored ? "Agent-supplied diagram" : "Recorded activity and file references"}</p><h2 id="security-map-title">System architecture</h2></div><details className="map-options"><summary>Map options</summary><div className="map-actions">{session&&<button type="button" className="text-button" aria-pressed={authored} onClick={()=>setAuthored(!authored)}>{authored?"Recorded activity":"Agent architecture"}</button>}{findingId&&<button type="button" className="text-button" onClick={onCloseExplanation}>Full map</button>}{session&&!authored&&<><a className="text-button" href={exportUrl("json")} download>Export JSON</a><a className="text-button" href={exportUrl("svg")} download>Export SVG</a></>}</div></details></div>
     {authored&&session?<AgentArchitecture sessionId={session.id}/>:<>
     {!session?<div className="empty">Choose a project and agent session to see its Security Map.</div>:<>
       {error&&<p className="error-banner" role="alert">{error}</p>}
       {!data&&!error&&<p className="empty" role="status">Loading recorded evidence…</p>}
       {data&&<>
-        <div className="map-legend"><span className="map-attempt">Attempted</span><span className="map-completed">Tool returned</span><span className="map-denied">Denied / failed</span><span className="map-finding">Finding</span><span>Animations paused by default</span></div>
+        <div className="map-legend"><span className="map-attempt">Attempted</span><span className="map-completed">Returned</span><span className="map-denied">Blocked / failed</span><span className="map-finding">Issue</span></div>
         <div className="map-layout"><div className="map-canvas"><GiottoDiagram doc={data.map.diagram} selectableIds={selectable} stepIndex={findingId?step:undefined} onSelect={id=>{setSelected(id);setSelectedEventId(null);}}/></div>
           {link&&<div className="map-evidence">{finding&&onFinding(finding,()=>setSelected(null))}{event&&onEvent(event,link)}{!finding&&!event&&<p>No recorded evidence for this element.</p>}
             <div className="map-evidence-links"><strong>Supporting records</strong>{link.eventIds.map(id=><button className="text-button" key={id} onClick={()=>setSelectedEventId(id)} aria-pressed={event?.id===id}>{id}</button>)}</div>
           </div>}
         </div>
         {findingId&&<div className="map-steps"><strong>Observed sequence · temporal order only</strong>{current?<><p>{current.text}</p><button className="text-button" disabled={step===0} onClick={()=>{setStep(step-1);setSelected(data.map.steps[step-1].elementId);}}>Previous</button><span>{step+1} / {data.map.steps.length}</span><button className="text-button" disabled={step===data.map.steps.length-1} onClick={()=>{setStep(step+1);setSelected(data.map.steps[step+1].elementId);}}>Next</button></>:<p>No event sequence was recorded for this finding.</p>}</div>}
-        <ul className="map-notices">{data.map.notices.map(n=><li key={n}>{n}</li>)}</ul>
+        <details className="map-notice-details"><summary>About this map</summary><ul className="map-notices">{data.map.notices.map(n=><li key={n}>{n}</li>)}</ul></details>
       </>}
     </>}
     </>}
