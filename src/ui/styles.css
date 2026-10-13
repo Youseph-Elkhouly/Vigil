@@ -264,9 +264,7 @@ giotto-player { --fig-bg: var(--soft); --fig-fg: var(--ink); --fig-muted: var(--
 .session-card__top .simulated { margin: 0; }
 .session-card__summary { color: var(--secondary); margin-top: 12px; }
 .session-card__bottom > span:first-child { font-size: 13px; }
-.demo-note { color: var(--secondary); font-size: 13px; margin: 16px 0 28px; }
 .session-detail-heading { margin-bottom: 28px; }
-.session-detail-heading:has(+ .demo-note) { margin-bottom: 0; }
 .issue-list { padding: 8px 20px; }
 .issue-row { display: flex; justify-content: space-between; align-items: center; gap: 20px; width: 100%; min-height: 64px; padding: 16px 4px; text-align: left; background: transparent; border: 0; border-bottom: 1px solid var(--line); cursor: pointer; }
 .issue-row:last-child { border-bottom: 0; }

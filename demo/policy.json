@@ -1,5 +1,0 @@
-{
-  "protectedPaths": [
-    "secrets/credentials.env"
-  ]
-}

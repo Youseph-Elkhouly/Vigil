@@ -22,5 +22,5 @@ test("all-session overview interleaves events and filters every section by the s
   assert.deepEqual(selected.findings.map((item) => item.id), ["finding-b"]);
   assert.deepEqual(selected.coverage.map((item) => item.id), ["session-b:gitleaks"]);
   assert.deepEqual(state.events.map((item) => item.id), ["event-a", "event-b"]);
-  assert.notEqual(sessionCode("fixture-codex-session-0001"), sessionCode("fixture-codex-session-0002"));
+  assert.notEqual(sessionCode("codex-session-0001"), sessionCode("codex-session-0002"));
 });

@@ -96,8 +96,8 @@ test("SQLite reload restores stable diagrams and mappings, and bounds select the
   }finally{db.close();rmSync(root,{recursive:true,force:true});}
 });
 
-test("all synthetic demo credential assignments are redacted before storage and diagram export",async()=>{
-  const raw=readFileSync("demo/project/secrets/credentials.env","utf8");
+test("synthetic credential assignments are redacted before storage and diagram export",async()=>{
+  const raw="API_KEY=synthetic-key-for-redaction\nGITHUB_TOKEN=ghp_000000000000000000000000000000000000";
   const values=raw.split("\n").filter(l=>l.includes("=")).map(l=>l.slice(l.indexOf("=")+1));
   const root=mkdtempSync(path.join(tmpdir(),"vigil-synthetic-"));const db=new VigilDatabase(path.join(root,"vigil.db"));
   try{

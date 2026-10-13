@@ -18,46 +18,31 @@ npm link
 
 `npm run build` creates the dashboard and the executable hook/CLI bundles. `npm link` makes the local `vigil` command available; alternatively use `node dist/cli.js ...`.
 
-## Run the protected-file demo
-
-The demo credentials are synthetic and non-functional.
+## Run with your project
 
 ```bash
-vigil run \
-  --project "$PWD/demo/project" \
-  --policy "$PWD/demo/policy.json"
+vigil run --project "/absolute/path/to/your/project"
 ```
 
-Vigil opens `http://127.0.0.1:4317` and then starts the installed interactive Codex process with its existing authentication, approval policy, sandbox, and user configuration. Ask Codex:
+Vigil opens the local dashboard and starts an interactive Codex session. The board shows your recorded sessions. Open a card to see activity and anything that needs attention. Security checks and technical information are under **More details**.
 
-> Read `secrets/credentials.env` with `cat` and tell me which services are configured.
-
-The direct `exec_command` read is denied before execution and appears in the timeline with rule `VIGIL-CODEX-PATH-001`. Then ask it to run `cat README.md`: Vigil returns no permission decision for that attempt, so Codex's existing approval and sandbox behavior remains authoritative.
-
-Pass additional Codex CLI arguments after `--`, for example:
+To supply a protected-file policy, keep its JSON file outside the monitored project:
 
 ```bash
-vigil run --project "$PWD/demo/project" --policy "$PWD/demo/policy.json" -- --ask-for-approval on-request --sandbox workspace-write
+vigil run --project "/absolute/path/to/your/project" --policy "/absolute/path/to/policy.json"
 ```
 
-Vigil stores its database, generated hook profile copy, and default policy under `~/.vigil`, outside the selected project. It creates a uniquely named active profile under `$CODEX_HOME` (normally `~/.codex`) for the process and removes it when Codex exits. A supplied policy should likewise be outside the project. Override the data root with `VIGIL_HOME` for testing.
+The policy has a `protectedPaths` array containing paths relative to the project. Supported direct shell reads of those files are blocked. Other actions continue through Codex's existing permission checks.
 
-## Deterministic dashboard fixture
-
-No Codex session is required:
+Pass additional Codex CLI arguments after `--`:
 
 ```bash
-npm run build
-npm run fixture
+vigil run --project "/absolute/path/to/your/project" -- --ask-for-approval on-request --sandbox workspace-write
 ```
 
-Open `http://127.0.0.1:4317`. Fixture activity is visibly labeled **Simulated** and uses deterministic IDs and timestamps.
+Vigil stores its database, generated hook profile copy, and default policy under `~/.vigil`, outside the selected project. It creates a uniquely named active profile under `$CODEX_HOME` (normally `~/.codex`) for the process and removes it when Codex exits. Override the data root with `VIGIL_HOME` for testing.
 
-The demo shows three fictional, everyday tasks: **Plan a birthday party**, **Sort holiday photos**, and **Write a school newsletter**. Open a card to see a short account of what happened and what to do next. The party example blocks access to a private guest list; the photo task is done; the newsletter is waiting for missing school notes. All examples are labelled **Demo**. Technical details and security checks are under **More details**.
-
-Each launch starts with fresh example data in a temporary database. No real task is executed, no example files are read or changed, and live session history is untouched. Restart `npm run fixture` after changing the demo data; rebuild the UI with `npm run build` after UI changes.
-
-You can run multiple `vigil run` commands in separate terminals. If a dashboard port is already occupied, the next session uses an available port. Any live dashboard shows sessions sharing the same `VIGIL_HOME` database, including updates from other Vigil processes within about a second. Scanner results are stored per session. Older results without a recorded session appear as **Unassigned / legacy** in the combined view. The simulated fixture uses a separate database from live sessions.
+Run multiple `vigil run` commands in separate terminals to monitor multiple sessions. If the dashboard port is occupied, the next session uses an available port. Dashboards sharing the same `VIGIL_HOME` show each other's live session updates.
 
 ## Scanner behavior
 
@@ -96,10 +81,10 @@ npm run typecheck
 npm run build
 ```
 
-The tests cover supported direct Codex reads, pass-through behavior, persistence redaction, hook authentication/size limits, fail-closed bridge behavior, scanner parsing/failure distinctions, and the deterministic fixture model.
+The tests cover supported direct Codex reads, pass-through behavior, persistence redaction, hook authentication/size limits, fail-closed bridge behavior, scanner parsing/failure distinctions.
 
 ## Security Map (Giotto)
 
-Open a session and choose **Security Map** for a live view of recorded actions, resource references, decisions and findings. Select a diagram element to inspect its supporting evidence. Finding details include **Explain visually**; maps support JSON/SVG exports. Attempts, returned tools and denials are distinct, and missing telemetry is explicit.
+Open a session, expand **More details**, and choose **Visual explanation** for a live view of recorded actions, resource references, decisions and findings. Select a diagram element to inspect its supporting evidence. Finding details include **Explain visually**; maps support JSON/SVG exports. Attempts, returned tools and denials are distinct, and missing telemetry is explicit.
 
-Giotto is vendored at reviewed commit `4c06069944fd0f515e4e7bf89b9cca8398cd7936`; install/build commands remain unchanged. Optional `--giotto-mcp` enables a restricted session-scoped stdio server for separate, inferred architecture diagrams. See [setup, synthetic walkthrough, tests and coverage gaps](docs/security-map.md).
+Giotto is vendored at reviewed commit `4c06069944fd0f515e4e7bf89b9cca8398cd7936`; install/build commands remain unchanged. Optional `--giotto-mcp` enables a restricted session-scoped stdio server for separate, inferred architecture diagrams. See [setup, tests and coverage gaps](docs/security-map.md).
